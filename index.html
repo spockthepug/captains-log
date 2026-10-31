@@ -74,6 +74,7 @@ h1{font-size:22px;font-weight:700;margin:18px 0 0}
 .tela.acende .sec:nth-of-type(3){animation-delay:.16s}
 .tela.acende .sec:nth-of-type(4){animation-delay:.24s}
 .tela.acende .sec:nth-of-type(5){animation-delay:.32s}
+.tela.acende .sec:nth-of-type(6){animation-delay:.4s}
 
 /* ===== Lista de registros ===== */
 .lista{list-style:none;margin:2px 0 0;padding:0}
@@ -219,16 +220,21 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
         </div>
       </div></div>
       <div class="sec"><div class="rail">03</div><div class="bd">
+        <div class="lb">Agenda do Google</div>
+        <p class="txt" id="txtGoogle"></p>
+        <div class="botoes"><button class="bt prim" id="btnGoogle">Conectar agenda</button><button class="bt" id="btnSairGoogle">Desconectar</button></div>
+      </div></div>
+      <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">04</div><div class="bd">
         <div class="lb">Proteção da memória</div>
         <p class="txt" id="txtProtecao"></p>
         <button class="bt" id="btnProteger">Proteger dados</button>
       </div></div>
-      <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">04</div><div class="bd">
+      <div class="sec"><div class="rail">05</div><div class="bd">
         <div class="lb">Backup</div>
         <p class="txt">Salva todos os registros, com os áudios e os textos, num arquivo .json. Guarde esse arquivo fora do aparelho, como no OneDrive ou no Google Drive. A chave do Groq não vai junto.</p>
         <div class="botoes"><button class="bt prim" id="btnBackup">Salvar backup</button><button class="bt" id="btnRestaurar">Restaurar backup</button></div>
       </div></div>
-      <div class="sec" style="--rail:var(--line);--onrail:var(--tx2)"><div class="rail">05</div><div class="bd">
+      <div class="sec" style="--rail:var(--line);--onrail:var(--tx2)"><div class="rail">06</div><div class="bd">
         <div class="lb">Sobre</div>
         <p class="txt">Captain's Log <span class="m" id="versao"></span>. Seus registros ficam guardados só neste aparelho.</p>
       </div></div>
@@ -262,7 +268,7 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 <script>
 'use strict';
 // Aumente junto com VERSION do sw.js a cada publicação.
-const VERSAO = '0.2.1';
+const VERSAO = '0.2.2';
 const TELAS = ['status', 'registros', 'ajustes'];
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -570,6 +576,88 @@ async function apagarChave() {
   avisar('Chave apagada.');
 }
 
+// ===== Agenda do Google =====
+// O ID do cliente é público por natureza (aparece em qualquer site com login do Google); não é senha.
+// O token de acesso vale 1 hora e fica só no localStorage deste aparelho.
+const GOOGLE_CLIENT_ID = '16533459886-3b7h66v5272b8cc3pgq4jekapcn5chk3.apps.googleusercontent.com';
+const ESCOPO_AGENDA = 'https://www.googleapis.com/auth/calendar.events';
+const CHAVE_GOOGLE = 'captainslog.google', CHAVE_GOOGLE_ESTADO = 'captainslog.google.estado';
+function lerGoogle() {
+  try { const g = JSON.parse(localStorage.getItem(CHAVE_GOOGLE)); return g && typeof g.token === 'string' ? g : null; }
+  catch { return null; }
+}
+let google = lerGoogle(); // { token, expira }
+let testeGoogle = ''; // resultado do último teste, mostrado em Ajustes
+const googleValido = () => !!google && google.expira > Date.now();
+function enderecoRetorno() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
+
+// Leva para a tela de login do Google; ele devolve o app no mesmo endereço, com o token no "#".
+function conectarGoogle() {
+  if (!GOOGLE_CLIENT_ID) { avisar('A conexão com o Google ainda não foi configurada.', 'erro'); bipe('erro'); return; }
+  const estado = novoId();
+  try { localStorage.setItem(CHAVE_GOOGLE_ESTADO, JSON.stringify({ estado, tela: location.hash.slice(1) || 'status' })); } catch {}
+  const p = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID, redirect_uri: enderecoRetorno(), response_type: 'token',
+    scope: ESCOPO_AGENDA, include_granted_scopes: 'true', state: estado,
+  });
+  location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + p);
+}
+function lerRetornoGoogle() {
+  const h = location.hash.slice(1);
+  if (!/(^|&)(access_token|error)=/.test(h)) return null;
+  const p = new URLSearchParams(h);
+  let salvo = null;
+  try { salvo = JSON.parse(localStorage.getItem(CHAVE_GOOGLE_ESTADO)); localStorage.removeItem(CHAVE_GOOGLE_ESTADO); } catch {}
+  history.replaceState(null, '', location.pathname + '#' + (salvo?.tela || 'ajustes')); // tira o token do endereço
+  if (!salvo || p.get('state') !== salvo.estado) return { erro: 'A resposta do Google não confere. Tente conectar de novo.' };
+  if (p.get('error')) return { erro: p.get('error') === 'access_denied' ? 'Conexão com o Google cancelada.' : `O Google não autorizou a conexão (${p.get('error')}).` };
+  google = { token: p.get('access_token'), expira: Date.now() + (Number(p.get('expires_in')) || 3600) * 1000 - 60000 };
+  try { localStorage.setItem(CHAVE_GOOGLE, JSON.stringify(google)); } catch {}
+  return { ok: true };
+}
+
+async function apiAgenda(caminho, opcoes = {}) {
+  if (!googleValido()) throw { tipo: 'token' };
+  const resp = await fetch('https://www.googleapis.com/calendar/v3' + caminho,
+    { ...opcoes, headers: { Authorization: 'Bearer ' + google.token, ...opcoes.headers } });
+  if (resp.status === 401) { google.expira = 0; throw { tipo: 'token' }; }
+  if (!resp.ok) throw { tipo: 'api', status: resp.status };
+  return resp.status === 204 ? null : resp.json();
+}
+function fmtEvento(ev) {
+  if (ev.start?.dateTime) return fmtQuando(ev.start.dateTime);
+  const [, m, d] = (ev.start?.date || '--').split('-');
+  return `${d}.${m}, dia inteiro`;
+}
+async function testarGoogle() {
+  try {
+    const d = await apiAgenda('/calendars/primary/events?' + new URLSearchParams({
+      timeMin: new Date().toISOString(), maxResults: '3', singleEvents: 'true', orderBy: 'startTime',
+    }));
+    const prox = d.items?.[0];
+    testeGoogle = prox
+      ? `Agenda conectada e testada. Próximo evento: "${prox.summary || '(sem título)'}", ${fmtEvento(prox)}.`
+      : 'Agenda conectada e testada. Nenhum evento futuro na sua agenda.';
+  } catch (e) {
+    testeGoogle = e?.tipo === 'token' ? 'O acesso expirou. Toque em "Conectar agenda" para renovar.'
+      : e?.status === 403 ? 'O Google recusou o acesso à agenda (código 403). Confira se a Google Calendar API está ativada no projeto.'
+      : e?.status ? `A agenda respondeu com erro (código ${e.status}).`
+      : 'Não foi possível falar com a Agenda do Google. Confira a internet.';
+  }
+  desenharAjustes();
+}
+async function desconectarGoogle() {
+  if (!(await confirmar('Desconectar a Agenda do Google deste aparelho? Seus eventos continuam na sua agenda.', { titulo: 'Desconectar agenda', sim: 'Desconectar' }))) return;
+  const token = google?.token;
+  google = null;
+  testeGoogle = '';
+  try { localStorage.removeItem(CHAVE_GOOGLE); } catch {}
+  if (token) fetch('https://oauth2.googleapis.com/revoke', { method: 'POST', body: new URLSearchParams({ token }) }).catch(() => {});
+  desenharAjustes();
+  bipe('ok');
+  avisar('Agenda do Google desconectada.');
+}
+
 // ===== Estado dos sistemas =====
 const sistemas = { gravador: 'ok', memoriaProtegida: false, uso: null };
 function suportaGravacao() { return !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder); }
@@ -660,6 +748,13 @@ function desenharAjustes() {
     : 'Para transformar seus áudios em texto, o app usa o Groq, um serviço grátis que não pede cartão. Crie uma conta, gere uma chave e cole aqui. O áudio vai para o Groq só para ser transcrito. A chave fica guardada só neste aparelho e não entra nos backups.';
   $('#semChave').hidden = !!chaveGroq;
   $('#comChave').hidden = !chaveGroq;
+  $('#txtGoogle').textContent = !GOOGLE_CLIENT_ID
+    ? 'Aguardando a configuração no Google Cloud.'
+    : google
+      ? testeGoogle || (googleValido() ? 'Agenda conectada.' : 'Agenda conectada, mas o acesso expirou. Toque em "Conectar agenda" para renovar.')
+      : 'Conecte sua Agenda do Google para ver e criar compromissos pelo app. O app pede acesso só aos eventos da agenda, nada de e-mail. Na primeira vez, o Google avisa que o app não é verificado: é normal num app pessoal, toque em "Continuar".';
+  $('#btnGoogle').hidden = googleValido();
+  $('#btnSairGoogle').hidden = !google;
   $('#versao').textContent = 'v' + VERSAO;
 }
 function desenhar() {
@@ -991,6 +1086,8 @@ $('#btnProteger').addEventListener('click', protegerMemoria);
 $('#btnChave').addEventListener('click', salvarChave);
 $('#chaveGroq').addEventListener('keydown', e => { if (e.key === 'Enter') salvarChave(); });
 $('#btnApagarChave').addEventListener('click', apagarChave);
+$('#btnGoogle').addEventListener('click', conectarGoogle);
+$('#btnSairGoogle').addEventListener('click', desconectarGoogle);
 addEventListener('online', () => { desenharSistemas(); desenharListas(); processarFila(); });
 addEventListener('offline', () => { desenharSistemas(); desenharListas(); });
 
@@ -1000,11 +1097,14 @@ async function iniciar() {
   criarVu();
   relogio();
   setInterval(relogio, 15000);
+  const retornoGoogle = lerRetornoGoogle(); // antes de irPara: limpa o token do endereço
   irPara(location.hash.slice(1));
   try { await carregar(); }
   catch { avisar('Não foi possível abrir a memória de bordo neste navegador.', 'erro'); }
   await verificarSistemas();
   desenhar();
+  if (retornoGoogle?.erro) avisar(retornoGoogle.erro, 'erro');
+  if (retornoGoogle?.ok) { avisar('Agenda do Google conectada.'); testarGoogle(); }
   enfileirarPendentes();
 }
 iniciar();
