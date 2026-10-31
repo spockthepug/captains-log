@@ -17,6 +17,7 @@
 :root{
   --bg:#070F26;--panel:#111D42;--line:#24366A;--tx:#E8ECF7;--tx2:#9FB0D6;
   --amb:#F5B342;--on:#231500;--cy:#4FD1E8;--oncy:#04222B;--red:#FF6B6B;--onred:#2A0508;
+  --ambtx:#F5B342; /* âmbar para texto (no tema claro precisa ser mais escuro) */
   --star:#C9D4F2;--sombra:rgba(3,7,20,.65);
   --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -24,7 +25,7 @@
 }
 :root[data-theme="light"]{
   --bg:#ECEEF3;--panel:#FFFFFF;--line:#CCD3E2;--tx:#13204A;--tx2:#4A5578;
-  --cy:#0B7285;--oncy:#FFFFFF;--red:#B3261E;--onred:#FFFFFF;
+  --cy:#0B7285;--oncy:#FFFFFF;--red:#B3261E;--onred:#FFFFFF;--ambtx:#8A5300;
   --star:#9AA6C4;--sombra:rgba(19,32,74,.35);
   color-scheme:light;
 }
@@ -46,7 +47,9 @@ svg{display:block}
 .marca{background:var(--amb);color:var(--on);border-radius:14px 4px 4px 14px;padding:4px 12px;font-size:14px;font-weight:700;letter-spacing:.06em}
 .bloco{background:var(--cy);width:16px;height:26px;border-radius:3px}
 .fio{flex:1;height:2px;background:var(--line)}
-.registro{font-family:var(--mono);font-size:12px;color:var(--tx2)}
+.engrenagem{width:38px;height:38px;flex:none;margin-left:4px;border:1px solid var(--line);border-radius:12px;background:none;color:var(--tx2);display:grid;place-items:center;padding:0}
+.engrenagem svg{width:20px;height:20px}
+.engrenagem.ativo{background:var(--amb);border-color:var(--amb);color:var(--on)}
 .visor{position:relative;overflow:hidden;margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:8px 12px;min-height:62px}
 .visor>div{position:relative}
 .estrela{position:absolute;border-radius:50%;background:var(--star)}
@@ -69,6 +72,43 @@ h1{font-size:22px;font-weight:700;margin:18px 0 0}
 .cab{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
 .link{background:none;border:0;color:var(--cy);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:6px 0}
 .txt{font-size:14px;line-height:1.5;color:var(--tx2);margin:6px 0 10px}
+.cab-tela{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px}
+.cab-tela h1{margin:0}
+.bt.peq{padding:7px 14px;font-size:14px}
+.divisor{margin:20px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+.mais{display:block;margin:10px auto 0}
+
+/* ===== Compromissos e missões ===== */
+.ev,.ms{display:flex;align-items:flex-start;gap:6px;padding:8px 0;border-top:1px solid var(--line)}
+.ev:first-child,.ms:first-child{border-top:0}
+.ev-bt,.ms-tx{flex:1;min-width:0;display:flex;gap:10px;background:none;border:0;padding:2px 0;text-align:left}
+.hr{font-family:var(--mono);font-size:14px;color:var(--cy);min-width:48px;padding-top:1px}
+.ev-t,.ms-t{display:block;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.sub{display:block;font-family:var(--mono);font-size:12px;color:var(--tx2);margin-top:2px}
+.ev.passou .ev-t,.ev.passou .hr{color:var(--tx2)}
+.ms-tx{flex-direction:column;gap:0}
+.ck{width:40px;height:40px;flex:none;margin:-8px 0 -8px -8px;background:none;border:0;padding:0;display:grid;place-items:center}
+.ck i{width:24px;height:24px;border:2px solid var(--cy);border-radius:7px;display:grid;place-items:center;color:var(--oncy)}
+.ck svg{width:16px;height:16px}
+.ms.feita .ck i{background:var(--cy)}
+.ms.feita .ms-t{text-decoration:line-through;color:var(--tx2)}
+.ms.vencida .ck i{border-color:var(--red)}
+.ms.vencida .sub{color:var(--red)}
+.ms.alerta .sub{color:var(--ambtx)}
+.lb.hoje{color:var(--ambtx)}
+
+/* ===== Formulários (compromisso e missão) ===== */
+.form label{display:block;margin-top:12px}
+.form label>.lb{display:block;margin-bottom:4px}
+.form .campo{font-family:var(--sans);margin:0}
+.form textarea.campo{min-height:72px;resize:vertical;line-height:1.4}
+.form input[type="date"].campo,.form input[type="time"].campo{display:block;min-height:44px;-webkit-appearance:none;appearance:none}
+.dupla{display:flex;gap:8px}
+.dupla>*{flex:1;min-width:0}
+.linha-form{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;font-size:15px}
+.erro-form{color:var(--red);font-size:14px;line-height:1.45;margin:10px 0 0}
+.erro-form:empty{display:none}
+.dlg-bt .esq{margin-right:auto;color:var(--red)}
 .tela.acende .sec,.tela.acende .comp{animation:acende .45s ease-out both}
 .tela.acende .sec:nth-of-type(2){animation-delay:.08s}
 .tela.acende .sec:nth-of-type(3){animation-delay:.16s}
@@ -151,7 +191,7 @@ a.bt{display:inline-block;text-decoration:none}
 .toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,calc(-100% - 24px - env(safe-area-inset-top)));visibility:hidden;transition:transform .25s ease-out,visibility 0s .25s;width:max-content;max-width:min(480px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--cy);border-radius:4px 12px 12px 4px;padding:10px 14px;font-size:14px;line-height:1.45;z-index:10}
 .toast.vis{transform:translate(-50%,0);visibility:visible;transition:transform .25s ease-out}
 .toast.erro{border-left-color:var(--red)}
-dialog{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(400px,calc(100% - 32px))}
+dialog{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(400px,calc(100% - 32px));max-height:calc(100dvh - 32px - env(safe-area-inset-top));overflow:auto}
 dialog::backdrop{background:var(--sombra)}
 dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 .dlg-bt{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
@@ -166,7 +206,8 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 <div class="teto" aria-hidden="true"></div>
 <div id="app">
   <header class="topo">
-    <span class="marca">CAPTAIN'S LOG</span><span class="bloco"></span><span class="fio"></span><span class="registro">TV-01</span>
+    <span class="marca">CAPTAIN'S LOG</span><span class="bloco"></span><span class="fio"></span>
+    <button class="engrenagem" data-ir="ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.9.5 1.9 3.1 0 3.5a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.9-3 1.9-3.4 0a1.7 1.7 0 0 0-2.6-1c-1.5.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1-2.6c-1.9-.4-1.9-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg></button>
   </header>
   <div class="visor" id="visor">
     <div class="lb">Data estelar</div>
@@ -179,8 +220,36 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
       <h1>Relatório de status</h1>
       <div class="comp"><div class="lb">Computador &gt;</div><p id="msgComputador">Inicializando sistemas…</p></div>
       <div class="sec"><div class="rail">01</div><div class="bd">
+        <div class="cab"><span class="lb">Hoje e amanhã</span><button class="link" data-ir="diario">Diário</button></div>
+        <ul class="lista" id="statusAgenda"></ul>
+      </div></div>
+      <div class="sec" id="secAlertas"><div class="rail">02</div><div class="bd">
+        <div class="cab"><span class="lb">Missões em alerta</span><button class="link" data-ir="missoes">Missões</button></div>
+        <ul class="lista" id="statusMissoes"></ul>
+      </div></div>
+      <div class="sec"><div class="rail">03</div><div class="bd">
         <div class="cab"><span class="lb">Registros recentes</span><button class="link" data-ir="registros">Ver todos</button></div>
         <ul class="lista" id="recentes"></ul>
+      </div></div>
+    </section>
+
+    <section class="tela" id="tela-diario" hidden>
+      <div class="cab-tela"><h1>Diário de bordo</h1><button class="bt prim peq" id="btnNovoEvento" data-acao="novo-evento">+ Novo</button></div>
+      <div class="cab" id="estadoAgenda"></div>
+      <div id="dias"></div>
+      <button class="link mais" id="btnAnteriores" data-acao="anteriores">Ver anteriores</button>
+    </section>
+
+    <section class="tela" id="tela-missoes" hidden>
+      <div class="cab-tela"><h1>Missões</h1><button class="bt prim peq" data-acao="nova-missao">+ Nova</button></div>
+      <div id="listaMissoes"></div>
+    </section>
+
+    <section class="tela" id="tela-registros" hidden>
+      <h1>Registros de áudio</h1>
+      <div class="sec"><div class="rail">01</div><div class="bd">
+        <div class="cab"><span class="lb" id="contagem">0 registros</span><button class="link" data-acao="importar">Abrir áudio</button></div>
+        <ul class="lista" id="todos"></ul>
       </div></div>
       <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">02</div><div class="bd">
         <div class="lb">Memória de bordo</div>
@@ -189,14 +258,6 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
           <div class="leitura"><div class="lb">Duração</div><div class="v" id="leDuracao">00:00</div></div>
           <div class="leitura"><div class="lb">Tamanho</div><div class="v" id="leTamanho">0 KB</div></div>
         </div>
-      </div></div>
-    </section>
-
-    <section class="tela" id="tela-registros" hidden>
-      <h1>Registros de áudio</h1>
-      <div class="sec"><div class="rail">01</div><div class="bd">
-        <div class="cab"><span class="lb" id="contagem">0 registros</span><button class="link" data-acao="importar">Abrir áudio</button></div>
-        <ul class="lista" id="todos"></ul>
       </div></div>
     </section>
 
@@ -256,20 +317,42 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
     </button>
   </div>
   <nav class="nav" aria-label="Seções">
-    <button data-ir="status">STATUS</button><button data-ir="registros">REGISTROS</button><button data-ir="ajustes">AJUSTES</button>
+    <button data-ir="status">STATUS</button><button data-ir="diario">DIÁRIO</button><button data-ir="missoes">MISSÕES</button><button data-ir="registros">ÁUDIOS</button>
   </nav>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <dialog id="dlg"><div class="lb" id="dlgTitulo">Confirmação</div><p id="dlgMsg"></p><div class="dlg-bt"><button class="bt" id="dlgNao">Cancelar</button><button class="bt perigo" id="dlgSim">Confirmar</button></div></dialog>
+<dialog id="dlgEvento" class="form">
+  <div class="lb" id="evCab" style="color:var(--cy)">Novo compromisso</div>
+  <label><span class="lb">Título</span><input class="campo" id="evTitulo" type="text" maxlength="200" placeholder="Veterinário do Spock"></label>
+  <label><span class="lb">Data</span><input class="campo" id="evData" type="date"></label>
+  <div class="linha-form"><span>Dia inteiro</span><div class="opcoes" data-campo="diaInteiro"><button data-valor="true">Sim</button><button data-valor="false">Não</button></div></div>
+  <div class="dupla" id="evHoras">
+    <label><span class="lb">Começa</span><input class="campo" id="evInicio" type="time"></label>
+    <label><span class="lb">Termina</span><input class="campo" id="evFim" type="time"></label>
+  </div>
+  <label><span class="lb">Local (opcional)</span><input class="campo" id="evLocal" type="text" maxlength="200"></label>
+  <label><span class="lb">Notas (opcional)</span><textarea class="campo" id="evNotas" maxlength="2000"></textarea></label>
+  <p class="erro-form" id="evErro"></p>
+  <div class="dlg-bt"><button class="link esq" id="evApagar">Apagar</button><button class="bt" id="evCancelar">Cancelar</button><button class="bt prim" id="evSalvar">Salvar</button></div>
+</dialog>
+<dialog id="dlgMissao" class="form">
+  <div class="lb" id="msCab" style="color:var(--cy)">Nova missão</div>
+  <label><span class="lb">Título</span><input class="campo" id="msTitulo" type="text" maxlength="200" placeholder="Renovar o seguro do carro"></label>
+  <div class="linha-form"><label style="margin:0;flex:1"><span class="lb">Prazo (opcional)</span><input class="campo" id="msPrazo" type="date"></label><button class="link" id="msSemPrazo" style="align-self:flex-end">Sem prazo</button></div>
+  <label><span class="lb">Notas (opcional)</span><textarea class="campo" id="msNotas" maxlength="2000"></textarea></label>
+  <p class="erro-form" id="msErro"></p>
+  <div class="dlg-bt"><button class="link esq" id="msApagar">Apagar</button><button class="bt" id="msCancelar">Cancelar</button><button class="bt prim" id="msSalvar">Salvar</button></div>
+</dialog>
 <input type="file" id="arqAudio" accept="audio/*,.opus,.ogg,.m4a,.mp3,.wav,.aac,.webm,.amr" multiple hidden>
 <input type="file" id="arqBackup" accept="application/json,.json" hidden>
 
 <script>
 'use strict';
 // Aumente junto com VERSION do sw.js a cada publicação.
-const VERSAO = '0.2.2';
-const TELAS = ['status', 'registros', 'ajustes'];
+const VERSAO = '0.3.0';
+const TELAS = ['status', 'diario', 'missoes', 'registros', 'ajustes'];
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
@@ -278,6 +361,7 @@ const ICONES = {
   pausa: '<svg class="i-pausa" viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>',
   baixar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
   apagar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
 };
 
 // ===== Preferências (ficam no localStorage) =====
@@ -338,30 +422,36 @@ function bipe(nome) {
 }
 
 // ===== Banco de dados local (IndexedDB: cabe áudio, o localStorage não) =====
-const BANCO = 'captains-log', LOJA = 'registros';
+// Versão 2 do banco: acrescenta a loja de missões. Cada versão nova só cria o que falta.
+const BANCO = 'captains-log', LOJAS = ['registros', 'missoes'];
 let promessaBanco = null;
 function abrirBanco() {
   return promessaBanco ??= new Promise((ok, falha) => {
-    const req = indexedDB.open(BANCO, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(LOJA, { keyPath: 'id' });
+    const req = indexedDB.open(BANCO, 2);
+    req.onupgradeneeded = () => LOJAS.forEach(l => {
+      if (!req.result.objectStoreNames.contains(l)) req.result.createObjectStore(l, { keyPath: 'id' });
+    });
     req.onsuccess = () => ok(req.result);
     req.onerror = () => falha(req.error);
   });
 }
-async function operar(modo, fn) {
+async function operar(loja, modo, fn) {
   const db = await abrirBanco();
   return new Promise((ok, falha) => {
-    const tx = db.transaction(LOJA, modo);
-    const req = fn(tx.objectStore(LOJA));
+    const tx = db.transaction(loja, modo);
+    const req = fn(tx.objectStore(loja));
     tx.oncomplete = () => ok(req.result);
     tx.onerror = tx.onabort = () => falha(tx.error);
   });
 }
-const bd = {
-  todos: () => operar('readonly', l => l.getAll()),
-  salvar: r => operar('readwrite', l => l.put(r)),
-  apagar: id => operar('readwrite', l => l.delete(id)),
-};
+function loja(nome) {
+  return {
+    todos: () => operar(nome, 'readonly', l => l.getAll()),
+    salvar: r => operar(nome, 'readwrite', l => l.put(r)),
+    apagar: id => operar(nome, 'readwrite', l => l.delete(id)),
+  };
+}
+const bd = loja('registros'), bdMissoes = loja('missoes');
 
 // Todo campo novo entra aqui, para registros e backups antigos continuarem funcionando.
 function normalizarRegistro(r) {
@@ -384,12 +474,28 @@ function novoId() {
   return crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
-let registros = [];
+// Missão: prazo é só a data (AAAA-MM-DD), sem hora.
+function normalizarMissao(m) {
+  if (!m || typeof m !== 'object' || !m.id) return null;
+  const data = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+  const momento = v => typeof v === 'string' && !isNaN(Date.parse(v)) ? v : null;
+  return {
+    id: String(m.id),
+    titulo: typeof m.titulo === 'string' && m.titulo.trim() ? m.titulo.trim() : 'Missão sem título',
+    prazo: data(m.prazo),
+    notas: typeof m.notas === 'string' ? m.notas : '',
+    criadaEm: momento(m.criadaEm) || new Date().toISOString(),
+    concluidaEm: momento(m.concluidaEm),
+  };
+}
+
+let registros = [], missoes = [];
 async function carregar() {
   registros = (await bd.todos())
     .map(normalizarRegistro)
     .filter(r => r && r.audio)
     .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+  missoes = (await bdMissoes.todos()).map(normalizarMissao).filter(Boolean);
 }
 async function guardar(r) {
   try {
@@ -400,6 +506,17 @@ async function guardar(r) {
     return false;
   }
   registros = [r, ...registros.filter(x => x.id !== r.id)].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+  return true;
+}
+async function guardarMissao(m) {
+  try {
+    await bdMissoes.salvar(m);
+  } catch {
+    avisar('Não foi possível guardar a missão.', 'erro');
+    bipe('erro');
+    return false;
+  }
+  missoes = [m, ...missoes.filter(x => x.id !== m.id)];
   return true;
 }
 
@@ -422,6 +539,19 @@ function fmtQuando(iso) {
   const dia = d.toDateString() === hoje.toDateString() ? 'HOJE' : pad(d.getDate()) + '.' + pad(d.getMonth() + 1);
   return dia + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
+// Datas "de calendário" (AAAA-MM-DD) sempre no fuso do aparelho.
+const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+function isoLocal(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function dataLocal(iso) { const [a, m, d] = iso.split('-').map(Number); return new Date(a, m - 1, d); }
+function hojeISO() { return isoLocal(new Date()); }
+function addDias(iso, n) { const d = dataLocal(iso); d.setDate(d.getDate() + n); return isoLocal(d); }
+function difDias(de, ate) { return Math.round((dataLocal(ate) - dataLocal(de)) / 864e5); }
+function fmtDiaCurto(iso) { const [, m, d] = iso.split('-'); return d + '.' + m; }
+function fmtDiaCab(iso) {
+  const n = difDias(hojeISO(), iso), base = DIAS_SEMANA[dataLocal(iso).getDay()] + ' ' + fmtDiaCurto(iso);
+  return n === 0 ? 'Hoje · ' + base : n === 1 ? 'Amanhã · ' + base : n === -1 ? 'Ontem · ' + base : base;
+}
+function horaDe(momento) { const d = new Date(momento); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function esc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 const EXTENSOES = { 'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a', 'audio/aac': 'aac', 'audio/ogg': 'ogg', 'audio/opus': 'opus', 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/amr': 'amr' };
 const TIPOS_POR_EXT = { opus: 'audio/ogg', ogg: 'audio/ogg', m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav', aac: 'audio/aac', webm: 'audio/webm', amr: 'audio/amr' };
@@ -586,20 +716,22 @@ function lerGoogle() {
   try { const g = JSON.parse(localStorage.getItem(CHAVE_GOOGLE)); return g && typeof g.token === 'string' ? g : null; }
   catch { return null; }
 }
-let google = lerGoogle(); // { token, expira }
-let testeGoogle = ''; // resultado do último teste, mostrado em Ajustes
+const CHAVE_AGENDA = 'captainslog.agenda', CHAVE_FALHA_SILENCIOSA = 'captainslog.google.falha';
+let google = lerGoogle(); // { token, expira }; existe enquanto a agenda estiver conectada, mesmo vencido
 const googleValido = () => !!google && google.expira > Date.now();
 function enderecoRetorno() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
 
 // Leva para a tela de login do Google; ele devolve o app no mesmo endereço, com o token no "#".
-function conectarGoogle() {
+// Silencioso (prompt=none): se você já está logado e autorizou, o Google volta direto, sem perguntar nada.
+function conectarGoogle({ silencioso = false } = {}) {
   if (!GOOGLE_CLIENT_ID) { avisar('A conexão com o Google ainda não foi configurada.', 'erro'); bipe('erro'); return; }
   const estado = novoId();
-  try { localStorage.setItem(CHAVE_GOOGLE_ESTADO, JSON.stringify({ estado, tela: location.hash.slice(1) || 'status' })); } catch {}
+  try { localStorage.setItem(CHAVE_GOOGLE_ESTADO, JSON.stringify({ estado, silencioso, tela: location.hash.slice(1) || 'status' })); } catch {}
   const p = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID, redirect_uri: enderecoRetorno(), response_type: 'token',
     scope: ESCOPO_AGENDA, include_granted_scopes: 'true', state: estado,
   });
+  if (silencioso) p.set('prompt', 'none');
   location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + p);
 }
 function lerRetornoGoogle() {
@@ -610,10 +742,26 @@ function lerRetornoGoogle() {
   try { salvo = JSON.parse(localStorage.getItem(CHAVE_GOOGLE_ESTADO)); localStorage.removeItem(CHAVE_GOOGLE_ESTADO); } catch {}
   history.replaceState(null, '', location.pathname + '#' + (salvo?.tela || 'ajustes')); // tira o token do endereço
   if (!salvo || p.get('state') !== salvo.estado) return { erro: 'A resposta do Google não confere. Tente conectar de novo.' };
-  if (p.get('error')) return { erro: p.get('error') === 'access_denied' ? 'Conexão com o Google cancelada.' : `O Google não autorizou a conexão (${p.get('error')}).` };
+  if (p.get('error')) {
+    if (salvo.silencioso) {
+      try { localStorage.setItem(CHAVE_FALHA_SILENCIOSA, String(Date.now())); } catch {}
+      return { erro: 'A Agenda do Google pediu para você entrar de novo. Toque em "Reconectar" no Diário de bordo.' };
+    }
+    return { erro: p.get('error') === 'access_denied' ? 'Conexão com o Google cancelada.' : `O Google não autorizou a conexão (${p.get('error')}).` };
+  }
   google = { token: p.get('access_token'), expira: Date.now() + (Number(p.get('expires_in')) || 3600) * 1000 - 60000 };
-  try { localStorage.setItem(CHAVE_GOOGLE, JSON.stringify(google)); } catch {}
-  return { ok: true };
+  try { localStorage.setItem(CHAVE_GOOGLE, JSON.stringify(google)); localStorage.removeItem(CHAVE_FALHA_SILENCIOSA); } catch {}
+  return { ok: true, silencioso: !!salvo.silencioso };
+}
+// Renova sozinho só com internet, e no máximo uma tentativa silenciosa falha por hora (evita ficar em ciclo).
+function podeRenovarSozinho() {
+  if (!google || googleValido() || !navigator.onLine) return false;
+  try { return Date.now() - Number(localStorage.getItem(CHAVE_FALHA_SILENCIOSA) || 0) > 36e5; } catch { return true; }
+}
+function renovarSePreciso() {
+  if (!podeRenovarSozinho() || gravador.rec || $('dialog[open]')) return false;
+  conectarGoogle({ silencioso: true });
+  return true;
 }
 
 async function apiAgenda(caminho, opcoes = {}) {
@@ -621,41 +769,221 @@ async function apiAgenda(caminho, opcoes = {}) {
   const resp = await fetch('https://www.googleapis.com/calendar/v3' + caminho,
     { ...opcoes, headers: { Authorization: 'Bearer ' + google.token, ...opcoes.headers } });
   if (resp.status === 401) { google.expira = 0; throw { tipo: 'token' }; }
-  if (!resp.ok) throw { tipo: 'api', status: resp.status };
-  return resp.status === 204 ? null : resp.json();
+  if (!resp.ok && resp.status !== 410) throw { tipo: 'api', status: resp.status }; // 410: já tinha sido apagado
+  return resp.status === 204 || resp.status === 410 ? null : resp.json();
 }
-function fmtEvento(ev) {
-  if (ev.start?.dateTime) return fmtQuando(ev.start.dateTime);
-  const [, m, d] = (ev.start?.date || '--').split('-');
-  return `${d}.${m}, dia inteiro`;
+function msgErroAgenda(e) {
+  return e?.tipo === 'token' ? 'O acesso à agenda expirou. Toque em "Atualizar" para renovar.'
+    : e?.status === 403 ? 'O Google recusou o acesso à agenda (código 403).'
+    : e?.status ? `A Agenda do Google respondeu com erro (código ${e.status}).`
+    : 'Não foi possível falar com a Agenda do Google. Confira a internet.';
 }
-async function testarGoogle() {
+
+// Cópia local da agenda (de 30 dias atrás até 60 dias à frente), para abrir rápido e funcionar sem internet.
+function lerAgenda() {
+  try { const a = JSON.parse(localStorage.getItem(CHAVE_AGENDA)); if (a && Array.isArray(a.eventos)) return a; } catch {}
+  return { atualizadoEm: null, eventos: [] };
+}
+let agenda = lerAgenda(), atualizandoAgenda = false;
+function salvarAgenda() { try { localStorage.setItem(CHAVE_AGENDA, JSON.stringify(agenda)); } catch {} }
+function simplificarEvento(ev) {
+  const diaInteiro = !!ev.start?.date;
+  return {
+    id: ev.id, titulo: ev.summary || '(sem título)', diaInteiro,
+    inicio: diaInteiro ? ev.start.date : ev.start?.dateTime, fim: diaInteiro ? ev.end?.date : ev.end?.dateTime,
+    local: ev.location || '', notas: ev.description || '', recorrente: !!ev.recurringEventId,
+  };
+}
+const diaDoEvento = e => e.diaInteiro ? e.inicio : isoLocal(new Date(e.inicio));
+const momentoInicio = e => e.diaInteiro ? dataLocal(e.inicio).getTime() : Date.parse(e.inicio);
+const momentoFim = e => e.diaInteiro ? dataLocal(e.fim || addDias(e.inicio, 1)).getTime() : Date.parse(e.fim || e.inicio);
+const passou = e => momentoFim(e) <= Date.now();
+const porInicio = (a, b) => momentoInicio(a) - momentoInicio(b);
+
+async function atualizarAgenda({ avisarErro = false } = {}) {
+  if (!google || atualizandoAgenda) return;
+  if (!navigator.onLine) { if (avisarErro) avisar('Sem internet. Mostrando a última versão salva da agenda.', 'erro'); return; }
+  if (!googleValido()) { if (!renovarSePreciso() && avisarErro) conectarGoogle({ silencioso: true }); return; }
+  atualizandoAgenda = true;
+  desenharDiario();
   try {
+    const hoje = hojeISO();
     const d = await apiAgenda('/calendars/primary/events?' + new URLSearchParams({
-      timeMin: new Date().toISOString(), maxResults: '3', singleEvents: 'true', orderBy: 'startTime',
+      timeMin: dataLocal(addDias(hoje, -30)).toISOString(), timeMax: dataLocal(addDias(hoje, 61)).toISOString(),
+      singleEvents: 'true', orderBy: 'startTime', maxResults: '250',
     }));
-    const prox = d.items?.[0];
-    testeGoogle = prox
-      ? `Agenda conectada e testada. Próximo evento: "${prox.summary || '(sem título)'}", ${fmtEvento(prox)}.`
-      : 'Agenda conectada e testada. Nenhum evento futuro na sua agenda.';
+    agenda = {
+      atualizadoEm: new Date().toISOString(),
+      eventos: (d.items || []).filter(e => e.status !== 'cancelled' && e.start).map(simplificarEvento).sort(porInicio),
+    };
+    salvarAgenda();
   } catch (e) {
-    testeGoogle = e?.tipo === 'token' ? 'O acesso expirou. Toque em "Conectar agenda" para renovar.'
-      : e?.status === 403 ? 'O Google recusou o acesso à agenda (código 403). Confira se a Google Calendar API está ativada no projeto.'
-      : e?.status ? `A agenda respondeu com erro (código ${e.status}).`
-      : 'Não foi possível falar com a Agenda do Google. Confira a internet.';
+    if (avisarErro) { avisar(msgErroAgenda(e), 'erro'); bipe('erro'); }
   }
-  desenharAjustes();
+  atualizandoAgenda = false;
+  desenharAgenda();
 }
+
 async function desconectarGoogle() {
   if (!(await confirmar('Desconectar a Agenda do Google deste aparelho? Seus eventos continuam na sua agenda.', { titulo: 'Desconectar agenda', sim: 'Desconectar' }))) return;
   const token = google?.token;
   google = null;
-  testeGoogle = '';
-  try { localStorage.removeItem(CHAVE_GOOGLE); } catch {}
+  agenda = { atualizadoEm: null, eventos: [] };
+  try { [CHAVE_GOOGLE, CHAVE_AGENDA, CHAVE_FALHA_SILENCIOSA].forEach(k => localStorage.removeItem(k)); } catch {}
   if (token) fetch('https://oauth2.googleapis.com/revoke', { method: 'POST', body: new URLSearchParams({ token }) }).catch(() => {});
-  desenharAjustes();
+  desenharAgenda();
   bipe('ok');
   avisar('Agenda do Google desconectada.');
+}
+
+// ===== Formulário de compromisso =====
+let editandoEvento = null;
+const diaInteiroForm = () => $('[data-campo="diaInteiro"] .ativo')?.dataset.valor === 'true';
+function marcarDiaInteiro(sim) {
+  $$('[data-campo="diaInteiro"] button').forEach(b => b.classList.toggle('ativo', b.dataset.valor === String(sim)));
+  $('#evHoras').hidden = sim;
+}
+function somarHora(hhmm, min) {
+  const [h, m] = hhmm.split(':').map(Number), t = Math.min(h * 60 + m + min, 23 * 60 + 59);
+  return pad(Math.floor(t / 60)) + ':' + pad(t % 60);
+}
+function abrirEvento(id) {
+  if (!google) { irPara('ajustes'); avisar('Conecte a Agenda do Google primeiro.'); return; }
+  if (!navigator.onLine) { avisar('Sem internet. Para criar ou editar compromissos é preciso conexão.', 'erro'); bipe('erro'); return; }
+  if (!googleValido()) { avisar('Renovando o acesso à agenda…'); conectarGoogle({ silencioso: true }); return; }
+  const ev = id ? agenda.eventos.find(e => e.id === id) : null;
+  editandoEvento = ev;
+  $('#evCab').textContent = ev ? 'Editar compromisso' : 'Novo compromisso';
+  $('#evTitulo').value = ev?.titulo === '(sem título)' ? '' : ev?.titulo || '';
+  $('#evData').value = ev ? diaDoEvento(ev) : hojeISO();
+  marcarDiaInteiro(!!ev?.diaInteiro);
+  if (ev && !ev.diaInteiro) {
+    $('#evInicio').value = horaDe(ev.inicio);
+    $('#evFim').value = horaDe(ev.fim || ev.inicio);
+  } else {
+    const prox = pad(Math.min(new Date().getHours() + 1, 23)) + ':00';
+    $('#evInicio').value = prox;
+    $('#evFim').value = somarHora(prox, 60);
+  }
+  $('#evInicio').dataset.antes = $('#evInicio').value;
+  $('#evLocal').value = ev?.local || '';
+  $('#evNotas').value = ev?.notas || '';
+  $('#evErro').textContent = '';
+  $('#evApagar').hidden = !ev;
+  $('#evSalvar').disabled = false;
+  $('#dlgEvento').showModal();
+}
+async function salvarEvento() {
+  const titulo = $('#evTitulo').value.trim(), data = $('#evData').value;
+  const erro = msg => { $('#evErro').textContent = msg; bipe('erro'); };
+  if (!titulo) return erro('Dê um título ao compromisso.');
+  if (!data) return erro('Escolha a data.');
+  const corpo = { summary: titulo, location: $('#evLocal').value.trim(), description: $('#evNotas').value.trim() };
+  // Na edição, o campo que não vale mais vai como null, senão o Google mistura o formato antigo com o novo.
+  const limpar = campos => editandoEvento ? Object.fromEntries(campos.map(c => [c, null])) : {};
+  if (diaInteiroForm()) {
+    // Mantém a duração de compromissos de vários dias; o fim do Google é o dia seguinte ao último.
+    const dias = editandoEvento?.diaInteiro && editandoEvento.fim ? Math.max(1, difDias(editandoEvento.inicio, editandoEvento.fim)) : 1;
+    corpo.start = { date: data, ...limpar(['dateTime', 'timeZone']) };
+    corpo.end = { date: addDias(data, dias), ...limpar(['dateTime', 'timeZone']) };
+  } else {
+    const ini = $('#evInicio').value, fim = $('#evFim').value;
+    if (!ini || !fim) return erro('Preencha o horário de começo e de fim.');
+    const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    corpo.start = { dateTime: `${data}T${ini}:00`, timeZone: fuso, ...limpar(['date']) };
+    corpo.end = { dateTime: `${fim > ini ? data : addDias(data, 1)}T${fim}:00`, timeZone: fuso, ...limpar(['date']) }; // fim antes do começo = vira a noite
+  }
+  $('#evSalvar').disabled = true;
+  try {
+    const ev = editandoEvento
+      ? await apiAgenda('/calendars/primary/events/' + encodeURIComponent(editandoEvento.id), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
+      : await apiAgenda('/calendars/primary/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    const s = simplificarEvento(ev);
+    agenda.eventos = [...agenda.eventos.filter(e => e.id !== s.id), s].sort(porInicio);
+    salvarAgenda();
+    $('#dlgEvento').close();
+    bipe('ok');
+    avisar(editandoEvento ? 'Compromisso atualizado na Agenda do Google.' : 'Compromisso registrado na Agenda do Google.');
+    desenharAgenda();
+  } catch (e) {
+    $('#evSalvar').disabled = false;
+    erro(msgErroAgenda(e));
+  }
+}
+async function apagarEvento() {
+  const ev = editandoEvento;
+  if (!ev || !(await confirmar(`Apagar "${ev.titulo}" da sua Agenda do Google?${ev.recorrente ? ' Só esta data será apagada; as outras repetições continuam.' : ''}`, { titulo: 'Apagar compromisso', sim: 'Apagar' }))) return;
+  try {
+    await apiAgenda('/calendars/primary/events/' + encodeURIComponent(ev.id), { method: 'DELETE' });
+  } catch (e) {
+    $('#evErro').textContent = msgErroAgenda(e);
+    bipe('erro');
+    return;
+  }
+  agenda.eventos = agenda.eventos.filter(e => e.id !== ev.id);
+  salvarAgenda();
+  $('#dlgEvento').close();
+  bipe('ok');
+  avisar('Compromisso apagado.');
+  desenharAgenda();
+}
+
+// ===== Missões =====
+const DIAS_ALERTA = 3; // âmbar quando faltam até 3 dias
+function situacaoMissao(m) {
+  if (m.concluidaEm) return { tipo: 'feita', texto: 'Concluída ' + fmtDiaCurto(isoLocal(new Date(m.concluidaEm))) };
+  if (!m.prazo) return { tipo: '', texto: 'Sem prazo' };
+  const d = difDias(hojeISO(), m.prazo);
+  if (d < 0) return { tipo: 'vencida', texto: 'Venceu ' + fmtDiaCurto(m.prazo) };
+  if (d === 0) return { tipo: 'alerta', texto: 'Vence hoje' };
+  if (d === 1) return { tipo: 'alerta', texto: 'Vence amanhã' };
+  if (d <= DIAS_ALERTA) return { tipo: 'alerta', texto: `Vence ${fmtDiaCurto(m.prazo)} · em ${d} dias` };
+  return { tipo: '', texto: 'Prazo ' + fmtDiaCurto(m.prazo) };
+}
+const porPrazo = (a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999') || a.criadaEm.localeCompare(b.criadaEm);
+let editandoMissao = null;
+function abrirMissao(id) {
+  const m = id ? missoes.find(x => x.id === id) : null;
+  editandoMissao = m;
+  $('#msCab').textContent = m ? 'Editar missão' : 'Nova missão';
+  $('#msTitulo').value = m?.titulo || '';
+  $('#msPrazo').value = m?.prazo || '';
+  $('#msNotas').value = m?.notas || '';
+  $('#msErro').textContent = '';
+  $('#msApagar').hidden = !m;
+  $('#dlgMissao').showModal();
+}
+async function salvarMissao() {
+  const titulo = $('#msTitulo').value.trim();
+  if (!titulo) { $('#msErro').textContent = 'Dê um título à missão.'; bipe('erro'); return; }
+  const m = normalizarMissao({
+    ...(editandoMissao || { id: novoId(), criadaEm: new Date().toISOString() }),
+    titulo, prazo: $('#msPrazo').value || null, notas: $('#msNotas').value.trim(),
+  });
+  if (!(await guardarMissao(m))) return;
+  $('#dlgMissao').close();
+  bipe('ok');
+  avisar(editandoMissao ? 'Missão atualizada.' : 'Missão registrada.');
+  desenharMissoesTudo();
+}
+async function alternarMissao(id) {
+  const m = missoes.find(x => x.id === id);
+  if (!m) return;
+  const nova = { ...m, concluidaEm: m.concluidaEm ? null : new Date().toISOString() };
+  if (!(await guardarMissao(nova))) return;
+  bipe(nova.concluidaEm ? 'fim' : 'ok');
+  avisar(nova.concluidaEm ? 'Missão cumprida, capitão.' : 'Missão reaberta.');
+  desenharMissoesTudo();
+}
+async function apagarMissao() {
+  const m = editandoMissao;
+  if (!m || !(await confirmar(`Apagar a missão "${m.titulo}"? Esta ação não pode ser desfeita.`, { titulo: 'Apagar missão', sim: 'Apagar' }))) return;
+  try { await bdMissoes.apagar(m.id); } catch { avisar('Não foi possível apagar a missão.', 'erro'); bipe('erro'); return; }
+  missoes = missoes.filter(x => x.id !== m.id);
+  $('#dlgMissao').close();
+  bipe('ok');
+  avisar('Missão apagada.');
+  desenharMissoesTudo();
 }
 
 // ===== Estado dos sistemas =====
@@ -722,12 +1050,22 @@ function desenharSistemas() {
 function desenharMensagem() {
   const h = new Date().getHours();
   const partes = [(h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', capitão.'];
+  if (google) {
+    const deHoje = agenda.eventos.filter(e => diaDoEvento(e) === hojeISO());
+    const prox = deHoje.find(e => !e.diaInteiro && momentoInicio(e) > Date.now());
+    const k = deHoje.length;
+    partes.push(!k ? 'Nenhum compromisso na agenda hoje.'
+      : `Hoje há ${k} ${k === 1 ? 'compromisso' : 'compromissos'}${prox ? `; o próximo é ${prox.titulo}, às ${horaDe(prox.inicio)}` : ''}.`);
+  }
+  const abertas = missoes.filter(m => !m.concluidaEm);
+  const vencidas = abertas.filter(m => situacaoMissao(m).tipo === 'vencida');
+  const aVencer = abertas.filter(m => situacaoMissao(m).tipo === 'alerta');
+  if (aVencer.length) partes.push(aVencer.length === 1 ? `A missão "${aVencer[0].titulo}" vence em breve.` : `${aVencer.length} missões vencem nos próximos dias.`);
   const n = registros.length;
-  const hoje = registros.filter(r => new Date(r.criadoEm).toDateString() === new Date().toDateString()).length;
-  if (!n) partes.push('Nenhum registro de áudio armazenado. O canal de gravação está pronto quando desejar.');
-  else partes.push(`Há ${n} ${n === 1 ? 'registro' : 'registros'} de áudio na memória de bordo${hoje ? `, ${hoje} de hoje` : ''}.`);
+  if (!n && !google && !missoes.length) partes.push('Nenhum registro de áudio armazenado. O canal de gravação está pronto quando desejar.');
   if (fila.size) partes.push(`${fila.size} ${fila.size === 1 ? 'registro aguarda' : 'registros aguardam'} transcrição.`);
   const alertas = [];
+  if (vencidas.length) alertas.push(vencidas.length === 1 ? `Alerta: a missão "${vencidas[0].titulo}" está vencida.` : `Alerta: ${vencidas.length} missões estão vencidas.`);
   if (sistemas.gravador === 'erro') alertas.push('O microfone não está acessível neste navegador.');
   if (!chaveGroq) alertas.push('A transcrição está inativa. Cadastre a chave do Groq em Ajustes.');
   if (!sistemas.memoriaProtegida) alertas.push('A memória de bordo está em modo temporário. Recomendo protegê-la em Ajustes.');
@@ -735,7 +1073,7 @@ function desenharMensagem() {
   $('#msgComputador').textContent = partes.join(' ');
 }
 function desenharAjustes() {
-  $$('.opcoes').forEach(g => {
+  $$('.opcoes[data-pref]').forEach(g => {
     const valor = String(prefs[g.dataset.pref]);
     g.querySelectorAll('button').forEach(b => b.classList.toggle('ativo', b.dataset.valor === valor));
   });
@@ -751,16 +1089,113 @@ function desenharAjustes() {
   $('#txtGoogle').textContent = !GOOGLE_CLIENT_ID
     ? 'Aguardando a configuração no Google Cloud.'
     : google
-      ? testeGoogle || (googleValido() ? 'Agenda conectada.' : 'Agenda conectada, mas o acesso expirou. Toque em "Conectar agenda" para renovar.')
+      ? 'Agenda do Google conectada: o Diário de bordo mostra a sua agenda principal.'
+        + (agenda.atualizadoEm ? ` Última atualização: ${fmtQuando(agenda.atualizadoEm)}.` : '')
+        + (googleValido() ? '' : ' O acesso do Google dura 1 hora e é renovado sozinho quando você abre o app.')
       : 'Conecte sua Agenda do Google para ver e criar compromissos pelo app. O app pede acesso só aos eventos da agenda, nada de e-mail. Na primeira vez, o Google avisa que o app não é verificado: é normal num app pessoal, toque em "Continuar".';
   $('#btnGoogle').hidden = googleValido();
+  $('#btnGoogle').textContent = google ? 'Reconectar' : 'Conectar agenda';
   $('#btnSairGoogle').hidden = !google;
   $('#versao').textContent = 'v' + VERSAO;
 }
+// Diário de bordo: um bloco por dia, hoje em âmbar.
+let mostrarAnteriores = false;
+function eventoHTML(e, noStatus) {
+  const mesmoDia = !e.diaInteiro && e.fim && isoLocal(new Date(e.fim)) === diaDoEvento(e);
+  const detalhes = [
+    noStatus ? (diaDoEvento(e) === hojeISO() ? 'Hoje' : 'Amanhã') : '',
+    e.diaInteiro ? 'Dia inteiro' : e.fim ? 'Até ' + (mesmoDia ? horaDe(e.fim) : fmtQuando(e.fim)) : '',
+    e.local,
+  ].filter(Boolean).join(' · ');
+  const alvo = noStatus ? 'data-ir="diario"' : `data-acao="editar-evento" data-id="${esc(e.id)}"`;
+  return `<li class="ev${passou(e) ? ' passou' : ''}"><button class="ev-bt" ${alvo}>
+    <span class="hr">${e.diaInteiro ? '--:--' : horaDe(e.inicio)}</span>
+    <span><span class="ev-t">${esc(e.titulo)}</span>${detalhes ? `<span class="sub">${esc(detalhes)}</span>` : ''}</span>
+  </button></li>`;
+}
+function estadoAgendaHTML() {
+  let t, bt = '<button class="link" data-acao="atualizar-agenda">Atualizar</button>';
+  if (atualizandoAgenda) { t = 'atualizando…'; bt = ''; }
+  else if (!navigator.onLine) { t = 'sem internet, última versão salva'; bt = ''; }
+  else if (!googleValido() && !podeRenovarSozinho()) { t = 'acesso expirado'; bt = '<button class="link" data-acao="reconectar-google">Reconectar</button>'; }
+  else t = agenda.atualizadoEm ? 'atualizada ' + fmtQuando(agenda.atualizadoEm) : 'ainda não carregada';
+  return `<span class="lb">Agenda do Google · ${t}</span>${bt}`;
+}
+function desenharDiario() {
+  const hoje = hojeISO();
+  $('#btnNovoEvento').hidden = $('#btnAnteriores').hidden = $('#estadoAgenda').hidden = !google;
+  if (!google) {
+    $('#dias').innerHTML = `<div class="sec"><div class="rail">01</div><div class="bd">
+      <p class="txt">Conecte sua Agenda do Google para ver e criar compromissos aqui. Eles continuam guardados no Google, com os lembretes de sempre.</p>
+      <button class="bt prim" data-acao="conectar-google">Conectar agenda</button></div></div>`;
+    return;
+  }
+  $('#estadoAgenda').innerHTML = estadoAgendaHTML();
+  const porDia = new Map();
+  for (const e of agenda.eventos) { const d = diaDoEvento(e); porDia.set(d, [...(porDia.get(d) || []), e]); }
+  const bloco = (d, i, estilo) => `<div class="sec" style="${estilo}"><div class="rail">${pad(i + 1)}</div><div class="bd">
+    <div class="lb${d === hoje ? ' hoje' : ''}">${fmtDiaCab(d)}</div>
+    <ul class="lista">${porDia.get(d).map(e => eventoHTML(e)).join('')}</ul></div></div>`;
+  const futuros = [...porDia.keys()].filter(d => d >= hoje).sort();
+  let html = futuros.length
+    ? futuros.map((d, i) => bloco(d, i, d === hoje ? '' : '--rail:var(--cy);--onrail:var(--oncy)')).join('')
+    : `<p class="vazio">${agenda.atualizadoEm ? 'Nenhum compromisso nos próximos 60 dias.' : 'A agenda ainda não foi carregada.'}</p>`;
+  if (mostrarAnteriores) {
+    const passados = [...porDia.keys()].filter(d => d < hoje).sort().reverse();
+    html += '<div class="lb divisor">Anteriores · últimos 30 dias</div>' + (passados.length
+      ? passados.map((d, i) => bloco(d, i, '--rail:var(--line);--onrail:var(--tx2)')).join('')
+      : '<p class="vazio">Nenhum compromisso nos últimos 30 dias.</p>');
+  }
+  $('#dias').innerHTML = html;
+  $('#btnAnteriores').textContent = mostrarAnteriores ? 'Esconder anteriores' : 'Ver anteriores';
+}
+
+// Missões: vencidas (vermelho), em andamento e concluídas (recolhidas).
+let mostrarConcluidas = false;
+function missaoHTML(m) {
+  const s = situacaoMissao(m);
+  return `<li class="ms ${s.tipo}">
+    <button class="ck" data-acao="concluir" data-id="${esc(m.id)}" aria-label="${m.concluidaEm ? 'Reabrir' : 'Concluir'} ${esc(m.titulo)}"><i>${m.concluidaEm ? ICONES.check : ''}</i></button>
+    <button class="ms-tx" data-acao="editar-missao" data-id="${esc(m.id)}"><span class="ms-t">${esc(m.titulo)}</span><span class="sub">${esc(s.texto)}</span></button>
+  </li>`;
+}
+function desenharMissoes() {
+  const abertas = missoes.filter(m => !m.concluidaEm);
+  const vencidas = abertas.filter(m => situacaoMissao(m).tipo === 'vencida').sort(porPrazo);
+  const andamento = abertas.filter(m => situacaoMissao(m).tipo !== 'vencida').sort(porPrazo);
+  const feitas = missoes.filter(m => m.concluidaEm).sort((a, b) => b.concluidaEm.localeCompare(a.concluidaEm));
+  const secoes = [];
+  if (vencidas.length) secoes.push(['Vencidas', vencidas.map(missaoHTML).join(''), '--rail:var(--red);--onrail:var(--onred)', '']);
+  secoes.push(['Em andamento', andamento.length ? andamento.map(missaoHTML).join('')
+    : '<li class="vazio">Nenhuma missão em andamento. Toque em "+ Nova" para registrar uma.</li>', '', '']);
+  if (feitas.length) secoes.push([`Concluídas · ${feitas.length}`, mostrarConcluidas ? feitas.slice(0, 30).map(missaoHTML).join('') : '',
+    '--rail:var(--line);--onrail:var(--tx2)', `<button class="link" data-acao="concluidas">${mostrarConcluidas ? 'Esconder' : 'Mostrar'}</button>`]);
+  $('#listaMissoes').innerHTML = secoes.map(([titulo, itens, estilo, extra], i) =>
+    `<div class="sec" style="${estilo}"><div class="rail">${pad(i + 1)}</div><div class="bd">
+      <div class="cab"><span class="lb">${titulo}</span>${extra}</div><ul class="lista">${itens}</ul></div></div>`).join('');
+}
+
+function desenharStatus() {
+  const hoje = hojeISO(), amanha = addDias(hoje, 1);
+  const evs = agenda.eventos.filter(e => { const d = diaDoEvento(e); return (d === hoje && !passou(e)) || d === amanha; }).slice(0, 5);
+  $('#statusAgenda').innerHTML = !google
+    ? '<li class="vazio">Conecte a Agenda do Google nos Ajustes (engrenagem lá em cima) para ver seus compromissos aqui.</li>'
+    : evs.length ? evs.map(e => eventoHTML(e, true)).join('') : '<li class="vazio">Nenhum compromisso para hoje e amanhã.</li>';
+  const alertas = missoes.filter(m => !m.concluidaEm && ['vencida', 'alerta'].includes(situacaoMissao(m).tipo)).sort(porPrazo);
+  $('#statusMissoes').innerHTML = alertas.length ? alertas.slice(0, 5).map(missaoHTML).join('') : '<li class="vazio">Nenhuma missão em alerta.</li>';
+  $('#secAlertas').style.cssText = alertas.some(m => situacaoMissao(m).tipo === 'vencida')
+    ? '--rail:var(--red);--onrail:var(--onred)' : '--rail:var(--cy);--onrail:var(--oncy)';
+}
+function desenharAgenda() { desenharDiario(); desenharStatus(); desenharMensagem(); desenharAjustes(); }
+function desenharMissoesTudo() { desenharMissoes(); desenharStatus(); desenharMensagem(); }
+
 function desenhar() {
   desenharListas();
   desenharLeituras();
   desenharSistemas();
+  desenharDiario();
+  desenharMissoes();
+  desenharStatus();
   desenharMensagem();
   desenharAjustes();
 }
@@ -774,6 +1209,7 @@ function irPara(tela) {
     if (ativa) { void s.offsetWidth; s.classList.add('acende'); }
   });
   $$('.nav button').forEach(b => b.classList.toggle('ativo', b.dataset.ir === tela));
+  $('.engrenagem').classList.toggle('ativo', tela === 'ajustes');
   window.scrollTo(0, 0);
   if (location.hash !== '#' + tela) history.replaceState(null, '', '#' + tela);
 }
@@ -1012,12 +1448,13 @@ function base64ParaBlob(b64, tipo) {
 async function salvarBackup() {
   const lista = [];
   for (const r of registros) lista.push({ ...r, audio: undefined, audioBase64: await blobParaBase64(r.audio) });
-  const dados = { app: 'captains-log', formato: 1, versaoApp: VERSAO, exportadoEm: new Date().toISOString(), registros: lista };
+  // Formato 2: inclui as missões. Os compromissos ficam guardados na própria Agenda do Google.
+  const dados = { app: 'captains-log', formato: 2, versaoApp: VERSAO, exportadoEm: new Date().toISOString(), registros: lista, missoes };
   const d = new Date();
   baixarArquivo(new Blob([JSON.stringify(dados)], { type: 'application/json' }),
     `captains-log-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`);
   bipe('ok');
-  avisar(`Backup salvo com ${lista.length} ${lista.length === 1 ? 'registro' : 'registros'}.`);
+  avisar(`Backup salvo com ${lista.length} ${lista.length === 1 ? 'registro' : 'registros'} e ${missoes.length} ${missoes.length === 1 ? 'missão' : 'missões'}.`);
 }
 async function restaurarBackup(arquivo) {
   let dados;
@@ -1027,8 +1464,9 @@ async function restaurarBackup(arquivo) {
     bipe('erro');
     return;
   }
-  const n = dados.registros.length;
-  if (!(await confirmar(`Restaurar ${n} ${n === 1 ? 'registro' : 'registros'} deste backup? Registros iguais aos que já existem serão substituídos; os outros continuam.`, { titulo: 'Restaurar backup', sim: 'Restaurar', perigo: false }))) return;
+  const lista = Array.isArray(dados.missoes) ? dados.missoes : []; // backups de formato 1 não têm missões
+  const n = dados.registros.length + lista.length;
+  if (!(await confirmar(`Restaurar ${dados.registros.length} ${dados.registros.length === 1 ? 'registro' : 'registros'} e ${lista.length} ${lista.length === 1 ? 'missão' : 'missões'} deste backup? Itens iguais aos que já existem serão substituídos; os outros continuam.`, { titulo: 'Restaurar backup', sim: 'Restaurar', perigo: false }))) return;
   let ok = 0;
   for (const x of dados.registros) {
     try {
@@ -1036,10 +1474,14 @@ async function restaurarBackup(arquivo) {
       if (r?.audio && await guardar(r)) ok++;
     } catch {}
   }
+  for (const x of lista) {
+    const m = normalizarMissao(x);
+    if (m && await guardarMissao(m)) ok++;
+  }
   await verificarSistemas();
   desenhar();
   bipe(ok ? 'ok' : 'erro');
-  avisar(ok === n ? `Backup restaurado: ${ok} ${ok === 1 ? 'registro' : 'registros'}.` : `Backup restaurado em parte: ${ok} de ${n} registros.`, ok === n ? 'ok' : 'erro');
+  avisar(ok === n ? `Backup restaurado: ${ok} ${ok === 1 ? 'item' : 'itens'}.` : `Backup restaurado em parte: ${ok} de ${n} itens.`, ok === n ? 'ok' : 'erro');
   enfileirarPendentes();
 }
 
@@ -1057,7 +1499,7 @@ document.addEventListener('click', e => {
   const alvo = e.target.closest('[data-ir],[data-acao],.opcoes button');
   if (!alvo) return;
   if (alvo.dataset.ir) return irPara(alvo.dataset.ir);
-  const id = alvo.closest('.item')?.dataset.id;
+  const id = alvo.closest('.item')?.dataset.id, alvoId = alvo.dataset.id;
   switch (alvo.dataset.acao) {
     case 'importar': return $('#arqAudio').click();
     case 'tocar': return tocar(id);
@@ -1065,9 +1507,19 @@ document.addEventListener('click', e => {
     case 'apagar': return apagarRegistro(id);
     case 'transcrever': return transcreverManual(id);
     case 'copiar': return copiarTexto(id);
+    case 'novo-evento': return abrirEvento(null);
+    case 'editar-evento': return abrirEvento(alvoId);
+    case 'atualizar-agenda': return atualizarAgenda({ avisarErro: true });
+    case 'conectar-google': case 'reconectar-google': return conectarGoogle();
+    case 'anteriores': mostrarAnteriores = !mostrarAnteriores; return desenharDiario();
+    case 'nova-missao': return abrirMissao(null);
+    case 'editar-missao': return abrirMissao(alvoId);
+    case 'concluir': return alternarMissao(alvoId);
+    case 'concluidas': mostrarConcluidas = !mostrarConcluidas; return desenharMissoes();
   }
   const grupo = alvo.closest('.opcoes');
-  if (grupo) {
+  if (grupo?.dataset.campo === 'diaInteiro') return marcarDiaInteiro(alvo.dataset.valor === 'true');
+  if (grupo?.dataset.pref) {
     const v = alvo.dataset.valor;
     prefs = normalizarPrefs({ ...prefs, [grupo.dataset.pref]: v === 'true' ? true : v === 'false' ? false : v });
     salvarPrefs();
@@ -1086,10 +1538,32 @@ $('#btnProteger').addEventListener('click', protegerMemoria);
 $('#btnChave').addEventListener('click', salvarChave);
 $('#chaveGroq').addEventListener('keydown', e => { if (e.key === 'Enter') salvarChave(); });
 $('#btnApagarChave').addEventListener('click', apagarChave);
-$('#btnGoogle').addEventListener('click', conectarGoogle);
+$('#btnGoogle').addEventListener('click', () => conectarGoogle());
 $('#btnSairGoogle').addEventListener('click', desconectarGoogle);
-addEventListener('online', () => { desenharSistemas(); desenharListas(); processarFila(); });
-addEventListener('offline', () => { desenharSistemas(); desenharListas(); });
+$('#evSalvar').addEventListener('click', salvarEvento);
+$('#evCancelar').addEventListener('click', () => $('#dlgEvento').close());
+$('#evApagar').addEventListener('click', apagarEvento);
+// Mudou o começo: o fim anda junto, mantendo a duração que estava.
+$('#evInicio').addEventListener('change', () => {
+  const ini = $('#evInicio').value, antes = $('#evInicio').dataset.antes, fim = $('#evFim').value;
+  if (!ini) return;
+  const minutos = h => { const [a, b] = h.split(':').map(Number); return a * 60 + b; };
+  const duracao = antes && fim && minutos(fim) > minutos(antes) ? minutos(fim) - minutos(antes) : 60;
+  $('#evFim').value = somarHora(ini, duracao);
+  $('#evInicio').dataset.antes = ini;
+});
+$('#msSalvar').addEventListener('click', salvarMissao);
+$('#msCancelar').addEventListener('click', () => $('#dlgMissao').close());
+$('#msApagar').addEventListener('click', apagarMissao);
+$('#msSemPrazo').addEventListener('click', () => { $('#msPrazo').value = ''; });
+addEventListener('online', () => { desenharSistemas(); desenharListas(); processarFila(); atualizarAgenda(); });
+addEventListener('offline', () => { desenharSistemas(); desenharListas(); desenharDiario(); });
+// Ao voltar para o app: renova o acesso ao Google se venceu, ou atualiza a agenda se a cópia tiver mais de 5 min.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || renovarSePreciso()) return;
+  if (googleValido() && Date.now() - (Date.parse(agenda.atualizadoEm) || 0) > 5 * 60000) atualizarAgenda();
+  else desenhar(); // o dia pode ter virado
+});
 
 async function iniciar() {
   aplicarTema();
@@ -1104,7 +1578,9 @@ async function iniciar() {
   await verificarSistemas();
   desenhar();
   if (retornoGoogle?.erro) avisar(retornoGoogle.erro, 'erro');
-  if (retornoGoogle?.ok) { avisar('Agenda do Google conectada.'); testarGoogle(); }
+  if (retornoGoogle?.ok && !retornoGoogle.silencioso) avisar('Agenda do Google conectada.');
+  if (!retornoGoogle && renovarSePreciso()) return; // vai ao Google e volta; o app recomeça na volta
+  atualizarAgenda();
   enfileirarPendentes();
 }
 iniciar();

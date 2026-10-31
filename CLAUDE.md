@@ -20,10 +20,19 @@ decisões originais estão em [docs/PROJETO.md](docs/PROJETO.md).
 
 - Só publicar no GitHub depois que o dono aprovar. Nada pago ou que exija cartão sem perguntar.
 - Uma funcionalidade por vez.
-- **Áudios ficam no IndexedDB** (banco `captains-log`, loja `registros`); o `localStorage` guarda só
-  preferências (`captainslog.prefs`). Ele é pequeno demais para áudio.
-- **Todo campo novo de dados entra em `normalizarRegistro()`** (e `normalizarPrefs()`), para registros
-  e backups antigos continuarem funcionando.
+- **Dados no IndexedDB** (banco `captains-log`, versão 2): lojas `registros` (áudios) e `missoes`.
+  Loja nova = subir a versão em `abrirBanco()` e acrescentar em `LOJAS` (o upgrade só cria o que falta).
+  O `localStorage` guarda prefs (`captainslog.prefs`), chave do Groq, token do Google e a cópia da agenda.
+- **Todo campo novo de dados entra em `normalizarRegistro()` / `normalizarMissao()`** (e `normalizarPrefs()`),
+  para dados e backups antigos continuarem funcionando. Backup formato 2 = registros + missões
+  (compromissos ficam no Google).
+- **Diário de bordo = Agenda do Google** (agenda `primary`, escopo `calendar.events`). Login por
+  redirecionamento (OAuth implícito, `response_type=token`, token de 1 h no `#` da volta, lido em
+  `lerRetornoGoogle()` antes de `irPara`). Sem segredo do cliente: o `GOOGLE_CLIENT_ID` no código é público.
+  Token vencido → `renovarSePreciso()` vai ao Google com `prompt=none` ao abrir/voltar ao app; se falhar,
+  espera 1 h (`captainslog.google.falha`) e mostra "Reconectar". Cópia local: 30 dias atrás a 60 à frente.
+  Projeto Google Cloud `captains-log` em modo teste; origens e redirecionamentos: github.io e localhost:8123.
+- **Missões** ficam no app: prazo é data (AAAA-MM-DD); âmbar até `DIAS_ALERTA` (3) dias, vermelho vencida.
 - Valores de dinheiro, quando existirem, em **centavos** (inteiros).
 - A cada publicação, aumentar `VERSION` no `sw.js` **e** `VERSAO` no `index.html`.
 - Backups (`captains-log-backup-*.json`), chaves de API e áudios de teste **nunca** vão para o GitHub (ver `.gitignore`).
@@ -48,7 +57,11 @@ decisões originais estão em [docs/PROJETO.md](docs/PROJETO.md).
    Para testar importação, use `pc-transcricao/testes/teste-voz-sintetica.wav`.
    Para testar a transcrição sem chave real, substitua `window.fetch` para `api.groq.com` por uma
    resposta falsa (200 com `{text}`, 401, 429). Uma chave falsa contra o Groq real deve dar "recusou a chave".
+   Para testar a agenda, ponha `google = { token, expira }` válido e substitua `window.fetch` para
+   `googleapis.com/calendar` (GET com `{items}`, POST/PATCH devolvendo o evento, DELETE 204).
+   Cuidado: um token falso contra o Google real dá 401 e o app tenta renovar indo ao Google (sai da página).
 5. Ao terminar, apague os dados de teste do navegador (IndexedDB `captains-log` e `localStorage`).
+   Antes de apagar o banco, feche a conexão do app (`(await abrirBanco()).close()`), senão fica bloqueado.
 
 ## Estética
 
@@ -77,8 +90,9 @@ de forma educada e precisa, como o Data de Star Trek ("Bom dia, capitão. …").
 2. ✅ **Transcrição** pelo Groq grátis (decidido em 2026-10-31): automática ao gravar/importar, fila que
    espera a internet voltar, botão "Transcrever"/"Tentar de novo", "Copiar texto". v0.2.0.
    O PC (faster-whisper em `pc-transcricao/`) fica como opção futura para áudios mais pessoais.
-3. **Diário de bordo e Missões:** compromissos com data/hora, missões com prazo; alertas âmbar (a vencer)
-   e vermelho (vencido) no Relatório de status.
+3. ✅ **Diário de bordo e Missões** (v0.3.0): Diário lê/cria/edita/apaga na Agenda do Google; Missões no
+   app com alertas; Relatório de status com hoje/amanhã e missões em alerta. Navegação STATUS · DIÁRIO ·
+   MISSÕES · ÁUDIOS, Ajustes na engrenagem. Depois: outras agendas além da principal; missões repetidas.
 4. **Assistente:** texto transcrito vira compromisso ou missão, sempre com confirmação.
    Decidir a IA: opção grátis (ex.: Groq) ou Claude pago por uso (exige cartão, perguntar antes).
 5. **Saúde:** coletor de medidas do dono — peso, % de gordura, massa magra e outras (definir a lista na etapa),
