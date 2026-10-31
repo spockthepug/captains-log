@@ -38,6 +38,8 @@ svg{display:block}
 .m{font-family:var(--mono)}
 .lb{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--tx2);text-transform:uppercase}
 #app{max-width:520px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 16px calc(180px + env(safe-area-inset-bottom))}
+/* Faixa opaca atrás da barra de status do iPhone, para o conteúdo rolado não aparecer sob a câmera */
+.teto{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:6}
 
 /* ===== Cabeçalho, visor e luzes ===== */
 .topo{display:flex;align-items:center;gap:4px}
@@ -71,11 +73,12 @@ h1{font-size:22px;font-weight:700;margin:18px 0 0}
 .tela.acende .sec:nth-of-type(2){animation-delay:.08s}
 .tela.acende .sec:nth-of-type(3){animation-delay:.16s}
 .tela.acende .sec:nth-of-type(4){animation-delay:.24s}
+.tela.acende .sec:nth-of-type(5){animation-delay:.32s}
 
 /* ===== Lista de registros ===== */
 .lista{list-style:none;margin:2px 0 0;padding:0}
 .vazio{color:var(--tx2);font-size:14px;line-height:1.5;padding:6px 0}
-.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.item{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:9px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
 .play{width:42px;height:42px;flex:none;border-radius:50%;border:2px solid var(--cy);background:none;color:var(--cy);display:grid;place-items:center;padding:0}
 .play svg,.icone svg{width:20px;height:20px}
@@ -88,6 +91,11 @@ h1{font-size:22px;font-weight:700;margin:18px 0 0}
 .prog{height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--cy)}
 .icone{width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:12px;background:none;color:var(--tx2);display:grid;place-items:center;padding:0}
+.texto{flex-basis:100%;min-width:0;padding-left:52px}
+.transc{margin:0;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+#recentes .transc{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.estado{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--cy);padding:4px 0}
+.estado.erro{font-family:var(--sans);font-size:14px;letter-spacing:0;text-transform:none;line-height:1.45;color:var(--red)}
 
 /* ===== Leituras de instrumento ===== */
 .leituras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
@@ -105,6 +113,9 @@ h1{font-size:22px;font-weight:700;margin:18px 0 0}
 .bt{border:1px solid var(--line);background:none;color:var(--tx);border-radius:999px;padding:10px 16px;font-size:15px}
 .bt.prim{background:var(--amb);border-color:var(--amb);color:var(--on);font-weight:700}
 .bt.perigo{background:var(--red);border-color:var(--red);color:var(--onred);font-weight:700}
+a.bt{display:inline-block;text-decoration:none}
+.campo{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--tx);font-family:var(--mono);font-size:16px;padding:10px 12px;margin-bottom:10px}
+#comChave .linha{border-top:0;padding-top:0}
 
 /* ===== Base fixa: canal de áudio + navegação ===== */
 .base{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(10px + env(safe-area-inset-bottom));z-index:5}
@@ -150,6 +161,7 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 </style>
 </head>
 <body>
+<div class="teto" aria-hidden="true"></div>
 <div id="app">
   <header class="topo">
     <span class="marca">CAPTAIN'S LOG</span><span class="bloco"></span><span class="fio"></span><span class="registro">TV-01</span>
@@ -194,16 +206,28 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
         <div class="linha"><span>Bipes</span><div class="opcoes" data-pref="som"><button data-valor="true">Ligados</button><button data-valor="false">Desligados</button></div></div>
       </div></div>
       <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">02</div><div class="bd">
+        <div class="lb">Transcrição</div>
+        <p class="txt" id="txtTranscricao"></p>
+        <div id="semChave">
+          <input class="campo" id="chaveGroq" type="text" placeholder="gsk_..." autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Chave do Groq">
+          <div class="botoes"><button class="bt prim" id="btnChave">Salvar chave</button><a class="bt" href="https://console.groq.com/keys" target="_blank" rel="noopener">Criar chave no Groq</a></div>
+        </div>
+        <div id="comChave">
+          <div class="linha"><span>Automática</span><div class="opcoes" data-pref="transcreverAuto"><button data-valor="true">Ligada</button><button data-valor="false">Desligada</button></div></div>
+          <div class="botoes"><button class="bt" id="btnApagarChave">Apagar chave</button></div>
+        </div>
+      </div></div>
+      <div class="sec"><div class="rail">03</div><div class="bd">
         <div class="lb">Proteção da memória</div>
         <p class="txt" id="txtProtecao"></p>
         <button class="bt" id="btnProteger">Proteger dados</button>
       </div></div>
-      <div class="sec"><div class="rail">03</div><div class="bd">
+      <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">04</div><div class="bd">
         <div class="lb">Backup</div>
-        <p class="txt">Salva todos os registros, com os áudios, num arquivo .json. Guarde esse arquivo fora do aparelho, como no OneDrive ou no Google Drive.</p>
+        <p class="txt">Salva todos os registros, com os áudios e os textos, num arquivo .json. Guarde esse arquivo fora do aparelho, como no OneDrive ou no Google Drive. A chave do Groq não vai junto.</p>
         <div class="botoes"><button class="bt prim" id="btnBackup">Salvar backup</button><button class="bt" id="btnRestaurar">Restaurar backup</button></div>
       </div></div>
-      <div class="sec" style="--rail:var(--line);--onrail:var(--tx2)"><div class="rail">04</div><div class="bd">
+      <div class="sec" style="--rail:var(--line);--onrail:var(--tx2)"><div class="rail">05</div><div class="bd">
         <div class="lb">Sobre</div>
         <p class="txt">Captain's Log <span class="m" id="versao"></span>. Seus registros ficam guardados só neste aparelho.</p>
       </div></div>
@@ -237,7 +261,7 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 <script>
 'use strict';
 // Aumente junto com VERSION do sw.js a cada publicação.
-const VERSAO = '0.1.0';
+const VERSAO = '0.2.0';
 const TELAS = ['status', 'registros', 'ajustes'];
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -256,6 +280,7 @@ function normalizarPrefs(p) {
   return {
     tema: ['escuro', 'claro', 'auto'].includes(p.tema) ? p.tema : 'escuro',
     som: p.som !== false,
+    transcreverAuto: p.transcreverAuto !== false,
   };
 }
 function lerPrefs() {
@@ -345,6 +370,7 @@ function normalizarRegistro(r) {
     tamanho: Number.isFinite(r.tamanho) ? r.tamanho : (audio?.size ?? 0),
     audio,
     transcricao: typeof r.transcricao === 'string' ? r.transcricao : null,
+    transcricaoErro: typeof r.transcricaoErro === 'string' && r.transcricaoErro ? r.transcricaoErro : null,
   };
 }
 function novoId() {
@@ -418,6 +444,131 @@ function confirmar(msg, { titulo = 'Confirmação', sim = 'Confirmar', perigo = 
   });
 }
 
+// ===== Transcrição (Groq, plano grátis) =====
+// A chave fica só no localStorage deste aparelho: nunca no código, no GitHub ou nos backups.
+const CHAVE_GROQ = 'captainslog.groq';
+const GROQ = 'https://api.groq.com/openai/v1';
+const LIMITE_GROQ = 25 * 1048576; // tamanho máximo de arquivo no plano grátis
+function lerChave() { try { return localStorage.getItem(CHAVE_GROQ) || ''; } catch { return ''; } }
+let chaveGroq = lerChave();
+const fila = new Set(), transcrevendo = new Set();
+let filaRodando = false;
+
+// O Groq reconhece o formato pela extensão do nome do arquivo.
+function extGroq(tipo) { const e = extensao(tipo); return { opus: 'ogg', aac: 'm4a', audio: 'webm' }[e] || e; }
+function aguardaTranscricao(r) { return r.transcricao == null && !r.transcricaoErro; }
+
+async function pedirTranscricao(r) {
+  if (r.audio.size > LIMITE_GROQ) return { erro: 'Áudio grande demais para o plano grátis do Groq (máximo de 25 MB).' };
+  const fd = new FormData();
+  fd.append('file', r.audio, 'registro.' + extGroq(r.tipo));
+  fd.append('model', 'whisper-large-v3');
+  fd.append('language', 'pt');
+  fd.append('response_format', 'json');
+  fd.append('temperature', '0');
+  let resp;
+  try {
+    resp = await fetch(GROQ + '/audio/transcriptions', { method: 'POST', headers: { Authorization: 'Bearer ' + chaveGroq }, body: fd });
+  } catch {
+    return navigator.onLine ? { erro: 'Não foi possível falar com o Groq. Tente de novo.' } : { rede: true };
+  }
+  if (resp.ok) {
+    try { return { texto: String((await resp.json()).text ?? '').trim() }; }
+    catch { return { erro: 'O Groq respondeu de um jeito inesperado. Tente de novo.' }; }
+  }
+  if (resp.status === 401 || resp.status === 403) return { erro: 'O Groq recusou a chave. Confira a chave em Ajustes.', parar: true };
+  if (resp.status === 429) return { erro: 'Limite grátis do Groq atingido por agora. Tente de novo mais tarde.', parar: true };
+  if (resp.status === 413) return { erro: 'Áudio grande demais para o plano grátis do Groq (máximo de 25 MB).' };
+  if (resp.status === 400) return { erro: 'O Groq não conseguiu ler este áudio. O formato pode não ser aceito.' };
+  return { erro: `Falha no Groq (código ${resp.status}). Tente de novo.` };
+}
+
+function enfileirar(ids) {
+  if (!chaveGroq) return;
+  ids.forEach(id => fila.add(id));
+  desenharListas();
+  processarFila();
+}
+function autoTranscrever(ids) { if (prefs.transcreverAuto) enfileirar(ids); }
+function enfileirarPendentes() { autoTranscrever(registros.filter(aguardaTranscricao).map(r => r.id)); }
+
+async function processarFila() {
+  if (filaRodando) return;
+  filaRodando = true;
+  while (fila.size && chaveGroq && navigator.onLine) {
+    const id = fila.values().next().value;
+    const r = registros.find(x => x.id === id);
+    if (!r || r.transcricao != null) { fila.delete(id); continue; }
+    transcrevendo.add(id);
+    desenharListas();
+    const res = await pedirTranscricao(r);
+    transcrevendo.delete(id);
+    if (res.rede) break; // continua na fila e volta quando a internet voltar
+    fila.delete(id);
+    const atual = registros.find(x => x.id === id); // pode ter sido apagado enquanto esperava
+    if (atual) await guardar({ ...atual, transcricao: res.texto ?? null, transcricaoErro: res.erro ?? null });
+    if (res.parar) { fila.clear(); avisar(res.erro, 'erro'); bipe('erro'); break; }
+  }
+  filaRodando = false;
+  desenharListas();
+  desenharMensagem();
+}
+
+function transcreverManual(id) {
+  const r = registros.find(x => x.id === id);
+  if (!r) return;
+  if (!chaveGroq) {
+    avisar('Para transcrever, cadastre a chave do Groq em Ajustes.', 'erro');
+    bipe('erro');
+    return;
+  }
+  r.transcricaoErro = null;
+  if (!navigator.onLine) avisar('Sem internet agora. O registro será transcrito quando a conexão voltar.');
+  enfileirar([id]);
+}
+async function copiarTexto(id) {
+  const r = registros.find(x => x.id === id);
+  if (!r?.transcricao) return;
+  try { await navigator.clipboard.writeText(r.transcricao); bipe('ok'); avisar('Texto copiado.'); }
+  catch { bipe('erro'); avisar('Não foi possível copiar o texto.', 'erro'); }
+}
+
+async function salvarChave() {
+  const v = $('#chaveGroq').value.trim();
+  if (!v.startsWith('gsk_') || v.length < 20 || /\s/.test(v)) {
+    avisar('Essa não parece uma chave do Groq. Ela começa com gsk_ e é bem comprida.', 'erro');
+    bipe('erro');
+    return;
+  }
+  let msg = 'Chave do Groq conectada.';
+  try {
+    const resp = await fetch(GROQ + '/models', { headers: { Authorization: 'Bearer ' + v } });
+    if (resp.status === 401 || resp.status === 403) {
+      avisar('O Groq recusou esta chave. Copie de novo e confira se veio inteira.', 'erro');
+      bipe('erro');
+      return;
+    }
+  } catch {
+    msg = 'Chave guardada. Não deu para conferir agora porque não há conexão.';
+  }
+  try { localStorage.setItem(CHAVE_GROQ, v); } catch {}
+  chaveGroq = v;
+  $('#chaveGroq').value = '';
+  desenhar();
+  bipe('ok');
+  avisar(msg);
+  enfileirarPendentes();
+}
+async function apagarChave() {
+  if (!(await confirmar('Apagar a chave do Groq deste aparelho? Os textos já transcritos continuam guardados.', { titulo: 'Apagar chave', sim: 'Apagar' }))) return;
+  try { localStorage.removeItem(CHAVE_GROQ); } catch {}
+  chaveGroq = '';
+  fila.clear();
+  desenhar();
+  bipe('ok');
+  avisar('Chave apagada.');
+}
+
 // ===== Estado dos sistemas =====
 const sistemas = { gravador: 'ok', memoriaProtegida: false, uso: null };
 function suportaGravacao() { return !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder); }
@@ -440,7 +591,21 @@ function itemHTML(r, completo) {
       <div class="prog"><i></i></div></div>
     ${completo ? `<button class="icone" data-acao="baixar" aria-label="Baixar ${esc(r.nome)}">${ICONES.baixar}</button>
     <button class="icone" data-acao="apagar" aria-label="Apagar ${esc(r.nome)}">${ICONES.apagar}</button>` : ''}
+    ${textoHTML(r, completo)}
   </li>`;
+}
+function textoHTML(r, completo) {
+  let h;
+  if (r.transcricao != null) {
+    h = r.transcricao
+      ? `<p class="transc">${esc(r.transcricao)}</p>${completo ? '<button class="link" data-acao="copiar">Copiar texto</button>' : ''}`
+      : '<div class="estado">Nenhuma fala detectada</div>';
+  } else if (transcrevendo.has(r.id)) h = '<div class="estado">Transcrevendo…</div>';
+  else if (fila.has(r.id)) h = `<div class="estado">${navigator.onLine ? 'Na fila de transcrição' : 'Aguardando conexão para transcrever'}</div>`;
+  else if (r.transcricaoErro) h = `<div class="estado erro">${esc(r.transcricaoErro)}</div><button class="link" data-acao="transcrever">Tentar de novo</button>`;
+  else if (completo) h = '<button class="link" data-acao="transcrever">Transcrever</button>';
+  else return '';
+  return `<div class="texto">${h}</div>`;
 }
 function desenharListas() {
   $('#recentes').innerHTML = registros.length
@@ -472,8 +637,10 @@ function desenharMensagem() {
   const hoje = registros.filter(r => new Date(r.criadoEm).toDateString() === new Date().toDateString()).length;
   if (!n) partes.push('Nenhum registro de áudio armazenado. O canal de gravação está pronto quando desejar.');
   else partes.push(`Há ${n} ${n === 1 ? 'registro' : 'registros'} de áudio na memória de bordo${hoje ? `, ${hoje} de hoje` : ''}.`);
+  if (fila.size) partes.push(`${fila.size} ${fila.size === 1 ? 'registro aguarda' : 'registros aguardam'} transcrição.`);
   const alertas = [];
   if (sistemas.gravador === 'erro') alertas.push('O microfone não está acessível neste navegador.');
+  if (!chaveGroq) alertas.push('A transcrição está inativa. Cadastre a chave do Groq em Ajustes.');
   if (!sistemas.memoriaProtegida) alertas.push('A memória de bordo está em modo temporário. Recomendo protegê-la em Ajustes.');
   partes.push(...(alertas.length ? alertas : ['Nenhum alerta no momento.']));
   $('#msgComputador').textContent = partes.join(' ');
@@ -487,6 +654,11 @@ function desenharAjustes() {
     ? 'Memória protegida: o navegador não vai apagar seus registros para liberar espaço.'
     : 'Memória temporária: o navegador pode apagar os registros se faltar espaço ou se o app ficar muito tempo sem uso (comum no iPhone). Instalar o app na tela inicial e tocar em "Proteger dados" ajuda. Faça backups.';
   $('#btnProteger').hidden = sistemas.memoriaProtegida;
+  $('#txtTranscricao').textContent = chaveGroq
+    ? `Groq conectado (chave terminada em ${chaveGroq.slice(-4)}). Com a transcrição automática ligada, cada registro novo vira texto assim que houver internet.`
+    : 'Para transformar seus áudios em texto, o app usa o Groq, um serviço grátis que não pede cartão. Crie uma conta, gere uma chave e cole aqui. O áudio vai para o Groq só para ser transcrito. A chave fica guardada só neste aparelho e não entra nos backups.';
+  $('#semChave').hidden = !!chaveGroq;
+  $('#comChave').hidden = !chaveGroq;
   $('#versao').textContent = 'v' + VERSAO;
 }
 function desenhar() {
@@ -621,6 +793,7 @@ async function finalizarGravacao() {
   desenhar();
   bipe('fim');
   avisar(`Registro armazenado. Duração: ${fmtDur(r.duracaoSeg)}.`);
+  autoTranscrever([r.id]);
 }
 
 // ===== Importar áudios existentes =====
@@ -637,6 +810,7 @@ function duracaoDe(blob) {
 }
 async function importarAudios(arquivos) {
   let n = 0, ignorados = 0;
+  const novos = [];
   for (const arq of arquivos) {
     const ext = (arq.name.match(/\.([a-z0-9]+)$/i)?.[1] || '').toLowerCase();
     if (!arq.type.startsWith('audio/') && !TIPOS_POR_EXT[ext]) { ignorados++; continue; }
@@ -646,12 +820,13 @@ async function importarAudios(arquivos) {
       id: novoId(), criadoEm: new Date().toISOString(), origem: 'importado',
       nome: arq.name.replace(/\.[^.]+$/, ''), tipo, duracaoSeg: await duracaoDe(audio), tamanho: audio.size, audio,
     });
-    if (await guardar(r)) n++;
+    if (await guardar(r)) { n++; novos.push(r.id); }
   }
   await verificarSistemas();
   desenhar();
   if (n) { bipe('ok'); avisar(`${n} ${n === 1 ? 'áudio importado' : 'áudios importados'} para a memória de bordo.`); }
   if (ignorados) { bipe('erro'); avisar(`${ignorados} ${ignorados === 1 ? 'arquivo ignorado: não é' : 'arquivos ignorados: não são'} áudio.`, 'erro'); }
+  autoTranscrever(novos);
 }
 
 // ===== Reprodução =====
@@ -712,6 +887,7 @@ async function apagarRegistro(id) {
   const r = registros.find(x => x.id === id);
   if (!r || !(await confirmar(`Apagar "${r.nome}" (${fmtQuando(r.criadoEm)})? Esta ação não pode ser desfeita.`, { titulo: 'Apagar registro', sim: 'Apagar' }))) return;
   if (tocandoId === id) pararReproducao();
+  fila.delete(id);
   await bd.apagar(id);
   registros = registros.filter(x => x.id !== id);
   await verificarSistemas();
@@ -765,6 +941,7 @@ async function restaurarBackup(arquivo) {
   desenhar();
   bipe(ok ? 'ok' : 'erro');
   avisar(ok === n ? `Backup restaurado: ${ok} ${ok === 1 ? 'registro' : 'registros'}.` : `Backup restaurado em parte: ${ok} de ${n} registros.`, ok === n ? 'ok' : 'erro');
+  enfileirarPendentes();
 }
 
 async function protegerMemoria() {
@@ -787,6 +964,8 @@ document.addEventListener('click', e => {
     case 'tocar': return tocar(id);
     case 'baixar': return baixarRegistro(id);
     case 'apagar': return apagarRegistro(id);
+    case 'transcrever': return transcreverManual(id);
+    case 'copiar': return copiarTexto(id);
   }
   const grupo = alvo.closest('.opcoes');
   if (grupo) {
@@ -796,6 +975,7 @@ document.addEventListener('click', e => {
     aplicarTema();
     desenharAjustes();
     bipe('ok');
+    if (grupo.dataset.pref === 'transcreverAuto') enfileirarPendentes();
   }
 });
 $('#btnGravar').addEventListener('click', () => gravador.rec ? pararGravacao() : iniciarGravacao());
@@ -804,8 +984,11 @@ $('#btnBackup').addEventListener('click', salvarBackup);
 $('#btnRestaurar').addEventListener('click', () => $('#arqBackup').click());
 $('#arqBackup').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) restaurarBackup(f); });
 $('#btnProteger').addEventListener('click', protegerMemoria);
-addEventListener('online', desenharSistemas);
-addEventListener('offline', desenharSistemas);
+$('#btnChave').addEventListener('click', salvarChave);
+$('#chaveGroq').addEventListener('keydown', e => { if (e.key === 'Enter') salvarChave(); });
+$('#btnApagarChave').addEventListener('click', apagarChave);
+addEventListener('online', () => { desenharSistemas(); desenharListas(); processarFila(); });
+addEventListener('offline', () => { desenharSistemas(); desenharListas(); });
 
 async function iniciar() {
   aplicarTema();
@@ -818,6 +1001,7 @@ async function iniciar() {
   catch { avisar('Não foi possível abrir a memória de bordo neste navegador.', 'erro'); }
   await verificarSistemas();
   desenhar();
+  enfileirarPendentes();
 }
 iniciar();
 

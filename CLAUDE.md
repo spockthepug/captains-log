@@ -27,6 +27,12 @@ decisões originais estão em [docs/PROJETO.md](docs/PROJETO.md).
 - Valores de dinheiro, quando existirem, em **centavos** (inteiros).
 - A cada publicação, aumentar `VERSION` no `sw.js` **e** `VERSAO` no `index.html`.
 - Backups (`captains-log-backup-*.json`), chaves de API e áudios de teste **nunca** vão para o GitHub (ver `.gitignore`).
+- **Transcrição pelo Groq** (plano grátis, `whisper-large-v3`, `language=pt`), chamado direto do navegador
+  (o Groq aceita CORS). A chave do dono fica só no `localStorage` (`captainslog.groq`), fora das prefs e
+  dos backups; nunca escrever chave no código. Limite grátis: 25 MB por arquivo, 2 h de áudio por hora,
+  8 h por dia. O Groq reconhece o formato pela extensão do nome do arquivo (`extGroq`: .opus vira .ogg).
+- iPhone com Dynamic Island: o `.teto` fixo cobre `env(safe-area-inset-top)`; qualquer elemento fixo
+  no topo precisa respeitar essa área.
 - A legibilidade no celular vence qualquer efeito visual.
 
 ## Como testar
@@ -40,6 +46,8 @@ decisões originais estão em [docs/PROJETO.md](docs/PROJETO.md).
 4. O navegador embutido nega o microfone. Para testar a gravação, substitua
    `navigator.mediaDevices.getUserMedia` por um oscilador (`createMediaStreamDestination`).
    Para testar importação, use `pc-transcricao/testes/teste-voz-sintetica.wav`.
+   Para testar a transcrição sem chave real, substitua `window.fetch` para `api.groq.com` por uma
+   resposta falsa (200 com `{text}`, 401, 429). Uma chave falsa contra o Groq real deve dar "recusou a chave".
 5. Ao terminar, apague os dados de teste do navegador (IndexedDB `captains-log` e `localStorage`).
 
 ## Estética
@@ -61,9 +69,24 @@ de forma educada e precisa, como o Data de Star Trek ("Bom dia, capitão. …").
 ## Roteiro
 
 1. ✅ **Base:** gravar, abrir áudios existentes, lista, ouvir, baixar, apagar, backup, tema, bipes, PWA.
-   Falta: publicar no GitHub Pages, testar no celular de verdade, receber áudio pelo "Compartilhar" do Android.
-2. **Transcrição:** decidir entre Groq grátis (online) e PC (faster-whisper local).
-3. **Diário de bordo e Missões** (agenda e tarefas).
+   Publicado em https://spockthepug.github.io/captains-log/ (repo público `spockthepug/captains-log`, branch `main`).
+   Falta: testar no celular de verdade.
+   1b. **Áudios do WhatsApp:** o dono usa **iPhone**, onde PWA não recebe "Compartilhar" (sem `share_target`).
+   Caminho: WhatsApp → Salvar em Arquivos → botão Importar. Falta confirmar que .opus toca no iPhone
+   (se não tocar, a transcrição ainda funciona; avaliar converter ou só avisar).
+2. ✅ **Transcrição** pelo Groq grátis (decidido em 2026-10-31): automática ao gravar/importar, fila que
+   espera a internet voltar, botão "Transcrever"/"Tentar de novo", "Copiar texto". v0.2.0.
+   O PC (faster-whisper em `pc-transcricao/`) fica como opção futura para áudios mais pessoais.
+3. **Diário de bordo e Missões:** compromissos com data/hora, missões com prazo; alertas âmbar (a vencer)
+   e vermelho (vencido) no Relatório de status.
 4. **Assistente:** texto transcrito vira compromisso ou missão, sempre com confirmação.
-5. **Pets**, depois **Carro**.
-6. Sincronização PC e celular pelo Google Drive.
+   Decidir a IA: opção grátis (ex.: Groq) ou Claude pago por uso (exige cartão, perguntar antes).
+5. **Saúde:** coletor de medidas do dono — peso, % de gordura, massa magra e outras (definir a lista na etapa),
+   com histórico e gráfico; entrada manual ou por voz ("pesei 82,4"). PWA não lê o app Saúde da Apple.
+   Dados sensíveis: ficam no aparelho; só passam por IA na nuvem se o dono aceitar.
+6. **Pets:** vacinas, vermífugo, peso, consultas.
+7. **Carro:** abastecimentos (km/l, custo por km, etanol ou gasolina), revisões, IPVA, seguro. Dinheiro em centavos.
+8. **Sincronização** PC e celular pelo Google Drive (`appDataFolder`).
+
+Depois, um por vez: Missões externas (viagens), lembretes com o app fechado, resumo do dia, contas,
+assinaturas, vencimento de documentos, consultas e exames, casa, inventário, receitas, e-mail só leitura.
