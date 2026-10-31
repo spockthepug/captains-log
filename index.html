@@ -146,8 +146,9 @@ a.bt{display:inline-block;text-decoration:none}
 .nav button.ativo{background:var(--amb);border-color:var(--amb);color:var(--on);font-weight:700}
 
 /* ===== Avisos e diálogos ===== */
-.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-160%);transition:transform .25s ease-out;width:max-content;max-width:min(480px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--cy);border-radius:4px 12px 12px 4px;padding:10px 14px;font-size:14px;line-height:1.45;z-index:10}
-.toast.vis{transform:translate(-50%,0)}
+/* Escondido: sobe a altura inteira mais a área da câmera, e some de vez ao fim da animação */
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,calc(-100% - 24px - env(safe-area-inset-top)));visibility:hidden;transition:transform .25s ease-out,visibility 0s .25s;width:max-content;max-width:min(480px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--cy);border-radius:4px 12px 12px 4px;padding:10px 14px;font-size:14px;line-height:1.45;z-index:10}
+.toast.vis{transform:translate(-50%,0);visibility:visible;transition:transform .25s ease-out}
 .toast.erro{border-left-color:var(--red)}
 dialog{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(400px,calc(100% - 32px))}
 dialog::backdrop{background:var(--sombra)}
@@ -261,7 +262,7 @@ dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
 <script>
 'use strict';
 // Aumente junto com VERSION do sw.js a cada publicação.
-const VERSAO = '0.2.0';
+const VERSAO = '0.2.1';
 const TELAS = ['status', 'registros', 'ajustes'];
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -704,8 +705,9 @@ function criarVu() {
 
 // ===== Gravação =====
 const gravador = { rec: null, stream: null, pedacos: [], inicio: 0, timer: 0, raf: 0, fonte: null, wake: null };
+// MP4 primeiro: é o único que o iPhone sempre consegue tocar de volta (WebM grava, mas pode não tocar).
 function tipoGravacao() {
-  return ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
+  return ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
     .find(t => MediaRecorder.isTypeSupported?.(t)) ?? '';
 }
 async function iniciarGravacao() {
@@ -847,7 +849,9 @@ function tocar(id) {
 }
 function falhaReproducao(e) {
   if (e?.name === 'AbortError') return;
-  avisar('Este aparelho não consegue reproduzir este formato de áudio. O arquivo continua guardado.', 'erro');
+  avisar(e?.name === 'NotAllowedError'
+    ? 'O aparelho bloqueou o som. Toque no play de novo.'
+    : 'Este aparelho não consegue reproduzir este formato de áudio. O arquivo e o texto continuam guardados.', 'erro');
   bipe('erro');
   pararReproducao();
 }

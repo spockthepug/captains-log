@@ -1,5 +1,5 @@
 // A cada publicação, aumente VERSION (e VERSAO no index.html) para o app instalado receber a atualização.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `captains-log-${VERSION}`;
 const ARQUIVOS = [
   './',
