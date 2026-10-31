@@ -1,0 +1,3 @@
+faster-whisper==1.2.1
+# av 15+ removeu um parâmetro que o faster-whisper 1.2.1 usa; manter abaixo de 15.
+av==14.2.0

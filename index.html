@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Captain's Log</title>
+<meta name="description" content="Diário de bordo pessoal com assistente de áudio.">
+<meta name="theme-color" content="#070F26">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Captain's Log">
+<style>
+/* ===== Cores do painel (tema escuro é o padrão) ===== */
+:root{
+  --bg:#070F26;--panel:#111D42;--line:#24366A;--tx:#E8ECF7;--tx2:#9FB0D6;
+  --amb:#F5B342;--on:#231500;--cy:#4FD1E8;--oncy:#04222B;--red:#FF6B6B;--onred:#2A0508;
+  --star:#C9D4F2;--sombra:rgba(3,7,20,.65);
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#ECEEF3;--panel:#FFFFFF;--line:#CCD3E2;--tx:#13204A;--tx2:#4A5578;
+  --cy:#0B7285;--oncy:#FFFFFF;--red:#B3261E;--onred:#FFFFFF;
+  --star:#9AA6C4;--sombra:rgba(19,32,74,.35);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+svg{display:block}
+.m{font-family:var(--mono)}
+.lb{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--tx2);text-transform:uppercase}
+#app{max-width:520px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 16px calc(180px + env(safe-area-inset-bottom))}
+
+/* ===== Cabeçalho, visor e luzes ===== */
+.topo{display:flex;align-items:center;gap:4px}
+.marca{background:var(--amb);color:var(--on);border-radius:14px 4px 4px 14px;padding:4px 12px;font-size:14px;font-weight:700;letter-spacing:.06em}
+.bloco{background:var(--cy);width:16px;height:26px;border-radius:3px}
+.fio{flex:1;height:2px;background:var(--line)}
+.registro{font-family:var(--mono);font-size:12px;color:var(--tx2)}
+.visor{position:relative;overflow:hidden;margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:8px 12px;min-height:62px}
+.visor>div{position:relative}
+.estrela{position:absolute;border-radius:50%;background:var(--star)}
+.data{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--cy)}
+.data small{font-size:14px;color:var(--tx2);font-weight:400}
+.sistemas{display:flex;justify-content:space-between;gap:6px 10px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--tx2)}
+.luz{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+.luz.ok{background:var(--cy)}
+.luz.aviso{background:var(--amb)}
+.luz.erro{background:var(--red);animation:pisca 1.6s steps(1) infinite}
+
+/* ===== Telas e seções com trilho numerado ===== */
+h1{font-size:22px;font-weight:700;margin:18px 0 0}
+.comp{border-left:3px solid var(--cy);padding:2px 0 2px 10px;margin-top:8px}
+.comp .lb{color:var(--cy)}
+.comp p{margin:2px 0 0;font-size:15px;line-height:1.5}
+.sec{display:flex;margin-top:12px}
+.rail{width:30px;flex:none;border-radius:16px 0 0 16px;background:var(--rail,var(--amb));color:var(--onrail,var(--on));font-family:var(--mono);font-size:12px;font-weight:700;text-align:center;padding-top:10px;margin-right:3px}
+.bd{flex:1;min-width:0;background:var(--panel);border-radius:0 16px 16px 0;padding:10px 12px}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
+.link{background:none;border:0;color:var(--cy);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:6px 0}
+.txt{font-size:14px;line-height:1.5;color:var(--tx2);margin:6px 0 10px}
+.tela.acende .sec,.tela.acende .comp{animation:acende .45s ease-out both}
+.tela.acende .sec:nth-of-type(2){animation-delay:.08s}
+.tela.acende .sec:nth-of-type(3){animation-delay:.16s}
+.tela.acende .sec:nth-of-type(4){animation-delay:.24s}
+
+/* ===== Lista de registros ===== */
+.lista{list-style:none;margin:2px 0 0;padding:0}
+.vazio{color:var(--tx2);font-size:14px;line-height:1.5;padding:6px 0}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.play{width:42px;height:42px;flex:none;border-radius:50%;border:2px solid var(--cy);background:none;color:var(--cy);display:grid;place-items:center;padding:0}
+.play svg,.icone svg{width:20px;height:20px}
+.play .i-pausa,.item.tocando .play .i-play{display:none}
+.item.tocando .play .i-pausa{display:block}
+.item.tocando .play{background:var(--cy);color:var(--oncy)}
+.info{flex:1;min-width:0}
+.nome{font-size:15px;line-height:1.3;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.meta{font-family:var(--mono);font-size:12px;color:var(--tx2);margin-top:2px}
+.prog{height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--cy)}
+.icone{width:40px;height:40px;flex:none;border:1px solid var(--line);border-radius:12px;background:none;color:var(--tx2);display:grid;place-items:center;padding:0}
+
+/* ===== Leituras de instrumento ===== */
+.leituras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
+.leitura .v{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:2px}
+
+/* ===== Ajustes ===== */
+.linha{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.lb+.linha{border-top:0}
+.opcoes{display:flex;gap:3px}
+.opcoes button{border:1px solid var(--line);background:none;color:var(--tx2);font-family:var(--mono);font-size:12px;padding:8px 10px;border-radius:4px}
+.opcoes button:first-child{border-radius:12px 4px 4px 12px}
+.opcoes button:last-child{border-radius:4px 12px 12px 4px}
+.opcoes button.ativo{background:var(--cy);border-color:var(--cy);color:var(--oncy)}
+.botoes{display:flex;gap:8px;flex-wrap:wrap}
+.bt{border:1px solid var(--line);background:none;color:var(--tx);border-radius:999px;padding:10px 16px;font-size:15px}
+.bt.prim{background:var(--amb);border-color:var(--amb);color:var(--on);font-weight:700}
+.bt.perigo{background:var(--red);border-color:var(--red);color:var(--onred);font-weight:700}
+
+/* ===== Base fixa: canal de áudio + navegação ===== */
+.base{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(10px + env(safe-area-inset-bottom));z-index:5}
+.base>*{max-width:488px;margin-left:auto;margin-right:auto}
+.dock{display:flex;align-items:center;gap:14px}
+.rec{position:relative;width:60px;height:60px;flex:none;border-radius:50%;border:0;background:var(--amb);color:var(--on);display:grid;place-items:center;padding:0;margin:4px}
+.rec svg{width:26px;height:26px}
+.rec .anel{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--amb);pointer-events:none}
+.rec .i-parar,.gravando .rec .i-mic{display:none}
+.gravando .rec .i-parar{display:block}
+.gravando .rec{background:var(--red);color:var(--onred)}
+.gravando .rec .anel{border-color:var(--red);animation:anel 1.2s ease-out infinite}
+.dock-tx{flex:1;min-width:0}
+#recTitulo{font-size:16px;font-weight:700;margin-top:2px}
+.gravando #recEstado{color:var(--red)}
+.gravando #recTitulo{font-family:var(--mono);font-size:18px}
+.vu{display:none;gap:3px;align-items:flex-end;height:28px}
+.gravando .vu{display:flex}
+.gravando #btnImportar{display:none}
+.vu i{width:5px;border-radius:1px;background:var(--line)}
+.vu i.aceso{background:var(--cy)}
+.vu i.aceso.alto{background:var(--amb)}
+.vu i.aceso.pico{background:var(--red)}
+.nav{display:flex;gap:4px;margin-top:10px}
+.nav button{flex:1;border:1px solid var(--line);background:none;color:var(--tx2);font-family:var(--mono);font-size:12px;letter-spacing:.06em;padding:10px 0;border-radius:4px}
+.nav button:first-child{border-radius:14px 4px 4px 14px}
+.nav button:last-child{border-radius:4px 14px 14px 4px}
+.nav button.ativo{background:var(--amb);border-color:var(--amb);color:var(--on);font-weight:700}
+
+/* ===== Avisos e diálogos ===== */
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-160%);transition:transform .25s ease-out;width:max-content;max-width:min(480px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--cy);border-radius:4px 12px 12px 4px;padding:10px 14px;font-size:14px;line-height:1.45;z-index:10}
+.toast.vis{transform:translate(-50%,0)}
+.toast.erro{border-left-color:var(--red)}
+dialog{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(400px,calc(100% - 32px))}
+dialog::backdrop{background:var(--sombra)}
+dialog p{margin:6px 0 0;font-size:15px;line-height:1.5}
+.dlg-bt{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+@keyframes acende{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pisca{0%,60%{opacity:1}61%,100%{opacity:.25}}
+@keyframes anel{from{transform:scale(1);opacity:.8}to{transform:scale(1.35);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topo">
+    <span class="marca">CAPTAIN'S LOG</span><span class="bloco"></span><span class="fio"></span><span class="registro">TV-01</span>
+  </header>
+  <div class="visor" id="visor">
+    <div class="lb">Data estelar</div>
+    <div class="data"><span id="dataEstelar">----.---</span> <small id="hora">· --:--</small></div>
+  </div>
+  <div class="sistemas" id="sistemas"></div>
+
+  <main>
+    <section class="tela" id="tela-status">
+      <h1>Relatório de status</h1>
+      <div class="comp"><div class="lb">Computador &gt;</div><p id="msgComputador">Inicializando sistemas…</p></div>
+      <div class="sec"><div class="rail">01</div><div class="bd">
+        <div class="cab"><span class="lb">Registros recentes</span><button class="link" data-ir="registros">Ver todos</button></div>
+        <ul class="lista" id="recentes"></ul>
+      </div></div>
+      <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">02</div><div class="bd">
+        <div class="lb">Memória de bordo</div>
+        <div class="leituras">
+          <div class="leitura"><div class="lb">Registros</div><div class="v" id="leRegistros">0</div></div>
+          <div class="leitura"><div class="lb">Duração</div><div class="v" id="leDuracao">00:00</div></div>
+          <div class="leitura"><div class="lb">Tamanho</div><div class="v" id="leTamanho">0 KB</div></div>
+        </div>
+      </div></div>
+    </section>
+
+    <section class="tela" id="tela-registros" hidden>
+      <h1>Registros de áudio</h1>
+      <div class="sec"><div class="rail">01</div><div class="bd">
+        <div class="cab"><span class="lb" id="contagem">0 registros</span><button class="link" data-acao="importar">Abrir áudio</button></div>
+        <ul class="lista" id="todos"></ul>
+      </div></div>
+    </section>
+
+    <section class="tela" id="tela-ajustes" hidden>
+      <h1>Ajustes</h1>
+      <div class="sec"><div class="rail">01</div><div class="bd">
+        <div class="lb">Aparência e som</div>
+        <div class="linha"><span>Tema</span><div class="opcoes" data-pref="tema"><button data-valor="escuro">Escuro</button><button data-valor="claro">Claro</button><button data-valor="auto">Auto</button></div></div>
+        <div class="linha"><span>Bipes</span><div class="opcoes" data-pref="som"><button data-valor="true">Ligados</button><button data-valor="false">Desligados</button></div></div>
+      </div></div>
+      <div class="sec" style="--rail:var(--cy);--onrail:var(--oncy)"><div class="rail">02</div><div class="bd">
+        <div class="lb">Proteção da memória</div>
+        <p class="txt" id="txtProtecao"></p>
+        <button class="bt" id="btnProteger">Proteger dados</button>
+      </div></div>
+      <div class="sec"><div class="rail">03</div><div class="bd">
+        <div class="lb">Backup</div>
+        <p class="txt">Salva todos os registros, com os áudios, num arquivo .json. Guarde esse arquivo fora do aparelho, como no OneDrive ou no Google Drive.</p>
+        <div class="botoes"><button class="bt prim" id="btnBackup">Salvar backup</button><button class="bt" id="btnRestaurar">Restaurar backup</button></div>
+      </div></div>
+      <div class="sec" style="--rail:var(--line);--onrail:var(--tx2)"><div class="rail">04</div><div class="bd">
+        <div class="lb">Sobre</div>
+        <p class="txt">Captain's Log <span class="m" id="versao"></span>. Seus registros ficam guardados só neste aparelho.</p>
+      </div></div>
+    </section>
+  </main>
+</div>
+
+<div class="base">
+  <div class="dock" id="dock">
+    <button class="rec" id="btnGravar" aria-label="Gravar registro">
+      <span class="anel"></span>
+      <svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <svg class="i-parar" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+    </button>
+    <div class="dock-tx"><div class="lb" id="recEstado">Canal de áudio · pronto</div><div id="recTitulo">Gravar registro</div></div>
+    <div class="vu" id="vu" aria-hidden="true"></div>
+    <button class="icone" id="btnImportar" data-acao="importar" aria-label="Abrir áudio existente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+    </button>
+  </div>
+  <nav class="nav" aria-label="Seções">
+    <button data-ir="status">STATUS</button><button data-ir="registros">REGISTROS</button><button data-ir="ajustes">AJUSTES</button>
+  </nav>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg"><div class="lb" id="dlgTitulo">Confirmação</div><p id="dlgMsg"></p><div class="dlg-bt"><button class="bt" id="dlgNao">Cancelar</button><button class="bt perigo" id="dlgSim">Confirmar</button></div></dialog>
+<input type="file" id="arqAudio" accept="audio/*,.opus,.ogg,.m4a,.mp3,.wav,.aac,.webm,.amr" multiple hidden>
+<input type="file" id="arqBackup" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+// Aumente junto com VERSION do sw.js a cada publicação.
+const VERSAO = '0.1.0';
+const TELAS = ['status', 'registros', 'ajustes'];
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const ICONES = {
+  play: '<svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>',
+  pausa: '<svg class="i-pausa" viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>',
+  baixar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  apagar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+};
+
+// ===== Preferências (ficam no localStorage) =====
+const CHAVE_PREFS = 'captainslog.prefs';
+function normalizarPrefs(p) {
+  p = p && typeof p === 'object' ? p : {};
+  return {
+    tema: ['escuro', 'claro', 'auto'].includes(p.tema) ? p.tema : 'escuro',
+    som: p.som !== false,
+  };
+}
+function lerPrefs() {
+  try { return normalizarPrefs(JSON.parse(localStorage.getItem(CHAVE_PREFS))); }
+  catch { return normalizarPrefs(null); }
+}
+function salvarPrefs() {
+  try { localStorage.setItem(CHAVE_PREFS, JSON.stringify(prefs)); } catch {}
+}
+let prefs = lerPrefs();
+
+const mqClaro = matchMedia('(prefers-color-scheme: light)');
+function aplicarTema() {
+  const claro = prefs.tema === 'claro' || (prefs.tema === 'auto' && mqClaro.matches);
+  document.documentElement.dataset.theme = claro ? 'light' : 'dark';
+  $('meta[name="theme-color"]').content = claro ? '#ECEEF3' : '#070F26';
+}
+mqClaro.addEventListener?.('change', aplicarTema);
+
+// ===== Sons (gerados pelo próprio app) =====
+let ctxAudio = null;
+function contextoAudio() {
+  if (!ctxAudio) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    ctxAudio = new C();
+  }
+  if (ctxAudio.state === 'suspended') ctxAudio.resume();
+  return ctxAudio;
+}
+const SONS = { inicio: [660, 990], fim: [990, 1320], ok: [1320], erro: [440, 330] };
+function bipe(nome) {
+  if (!prefs.som) return;
+  const ctx = contextoAudio();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  SONS[nome].forEach((freq, i) => {
+    const osc = ctx.createOscillator(), ganho = ctx.createGain(), s = t + i * 0.09;
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    ganho.gain.setValueAtTime(0.0001, s);
+    ganho.gain.exponentialRampToValueAtTime(0.15, s + 0.01);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, s + 0.08);
+    osc.connect(ganho).connect(ctx.destination);
+    osc.start(s);
+    osc.stop(s + 0.1);
+  });
+}
+
+// ===== Banco de dados local (IndexedDB: cabe áudio, o localStorage não) =====
+const BANCO = 'captains-log', LOJA = 'registros';
+let promessaBanco = null;
+function abrirBanco() {
+  return promessaBanco ??= new Promise((ok, falha) => {
+    const req = indexedDB.open(BANCO, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(LOJA, { keyPath: 'id' });
+    req.onsuccess = () => ok(req.result);
+    req.onerror = () => falha(req.error);
+  });
+}
+async function operar(modo, fn) {
+  const db = await abrirBanco();
+  return new Promise((ok, falha) => {
+    const tx = db.transaction(LOJA, modo);
+    const req = fn(tx.objectStore(LOJA));
+    tx.oncomplete = () => ok(req.result);
+    tx.onerror = tx.onabort = () => falha(tx.error);
+  });
+}
+const bd = {
+  todos: () => operar('readonly', l => l.getAll()),
+  salvar: r => operar('readwrite', l => l.put(r)),
+  apagar: id => operar('readwrite', l => l.delete(id)),
+};
+
+// Todo campo novo entra aqui, para registros e backups antigos continuarem funcionando.
+function normalizarRegistro(r) {
+  if (!r || typeof r !== 'object' || !r.id) return null;
+  const audio = r.audio instanceof Blob ? r.audio : null;
+  return {
+    id: String(r.id),
+    criadoEm: typeof r.criadoEm === 'string' && !isNaN(Date.parse(r.criadoEm)) ? r.criadoEm : new Date().toISOString(),
+    origem: r.origem === 'importado' ? 'importado' : 'gravado',
+    nome: typeof r.nome === 'string' && r.nome.trim() ? r.nome.trim() : 'Registro de voz',
+    tipo: typeof r.tipo === 'string' ? r.tipo : (audio?.type || ''),
+    duracaoSeg: Number.isFinite(r.duracaoSeg) && r.duracaoSeg >= 0 ? Math.round(r.duracaoSeg) : null,
+    tamanho: Number.isFinite(r.tamanho) ? r.tamanho : (audio?.size ?? 0),
+    audio,
+    transcricao: typeof r.transcricao === 'string' ? r.transcricao : null,
+  };
+}
+function novoId() {
+  return crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+let registros = [];
+async function carregar() {
+  registros = (await bd.todos())
+    .map(normalizarRegistro)
+    .filter(r => r && r.audio)
+    .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+}
+async function guardar(r) {
+  try {
+    await bd.salvar(r);
+  } catch (e) {
+    avisar(e?.name === 'QuotaExceededError' ? 'Memória cheia. Apague registros antigos ou salve um backup.' : 'Não foi possível armazenar o registro.', 'erro');
+    bipe('erro');
+    return false;
+  }
+  registros = [r, ...registros.filter(x => x.id !== r.id)].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm));
+  return true;
+}
+
+// ===== Formatação =====
+const pad = n => String(n).padStart(2, '0');
+function diaDoAno(d) { return Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5); }
+function fmtDur(s) {
+  if (s == null) return '--:--';
+  s = Math.round(s);
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  return (h ? h + ':' + pad(m) : pad(m)) + ':' + pad(s % 60);
+}
+function fmtTam(b) {
+  if (!b) return '0 KB';
+  if (b < 1048576) return Math.max(1, Math.round(b / 1024)) + ' KB';
+  return (b / 1048576).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' MB';
+}
+function fmtQuando(iso) {
+  const d = new Date(iso), hoje = new Date();
+  const dia = d.toDateString() === hoje.toDateString() ? 'HOJE' : pad(d.getDate()) + '.' + pad(d.getMonth() + 1);
+  return dia + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function esc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const EXTENSOES = { 'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a', 'audio/aac': 'aac', 'audio/ogg': 'ogg', 'audio/opus': 'opus', 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/amr': 'amr' };
+const TIPOS_POR_EXT = { opus: 'audio/ogg', ogg: 'audio/ogg', m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav', aac: 'audio/aac', webm: 'audio/webm', amr: 'audio/amr' };
+function extensao(tipo) { return EXTENSOES[(tipo || '').split(';')[0]] || 'audio'; }
+
+// ===== Avisos e confirmação =====
+let tempoAviso = 0;
+function avisar(msg, tipo = 'ok') {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast vis' + (tipo === 'erro' ? ' erro' : '');
+  clearTimeout(tempoAviso);
+  tempoAviso = setTimeout(() => t.classList.remove('vis'), tipo === 'erro' ? 6000 : 3500);
+}
+function confirmar(msg, { titulo = 'Confirmação', sim = 'Confirmar', perigo = true } = {}) {
+  const dlg = $('#dlg');
+  $('#dlgTitulo').textContent = titulo;
+  $('#dlgMsg').textContent = msg;
+  $('#dlgSim').textContent = sim;
+  $('#dlgSim').className = 'bt ' + (perigo ? 'perigo' : 'prim');
+  return new Promise(ok => {
+    const fechar = v => { dlg.close(); $('#dlgSim').onclick = $('#dlgNao').onclick = dlg.oncancel = null; ok(v); };
+    $('#dlgSim').onclick = () => fechar(true);
+    $('#dlgNao').onclick = () => fechar(false);
+    dlg.oncancel = e => { e.preventDefault(); fechar(false); };
+    dlg.showModal();
+  });
+}
+
+// ===== Estado dos sistemas =====
+const sistemas = { gravador: 'ok', memoriaProtegida: false, uso: null };
+function suportaGravacao() { return !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder); }
+async function verificarSistemas() {
+  sistemas.gravador = suportaGravacao() ? 'ok' : 'erro';
+  try {
+    const p = await navigator.permissions?.query({ name: 'microphone' });
+    if (p?.state === 'denied') sistemas.gravador = 'erro';
+  } catch {}
+  try { sistemas.memoriaProtegida = (await navigator.storage?.persisted?.()) ?? false; } catch {}
+  try { sistemas.uso = (await navigator.storage?.estimate?.())?.usage ?? null; } catch {}
+}
+
+// ===== Desenho da interface =====
+function itemHTML(r, completo) {
+  return `<li class="item${r.id === tocandoId && !player.paused ? ' tocando' : ''}" data-id="${esc(r.id)}">
+    <button class="play" data-acao="tocar" aria-label="Ouvir ${esc(r.nome)}">${ICONES.play}${ICONES.pausa}</button>
+    <div class="info"><div class="nome">${esc(r.nome)}</div>
+      <div class="meta">${fmtQuando(r.criadoEm)} · ${fmtDur(r.duracaoSeg)} · ${r.origem === 'importado' ? 'IMPORTADO' : 'GRAVADO'}</div>
+      <div class="prog"><i></i></div></div>
+    ${completo ? `<button class="icone" data-acao="baixar" aria-label="Baixar ${esc(r.nome)}">${ICONES.baixar}</button>
+    <button class="icone" data-acao="apagar" aria-label="Apagar ${esc(r.nome)}">${ICONES.apagar}</button>` : ''}
+  </li>`;
+}
+function desenharListas() {
+  $('#recentes').innerHTML = registros.length
+    ? registros.slice(0, 3).map(r => itemHTML(r, false)).join('')
+    : '<li class="vazio">Nenhum registro ainda. Toque no botão âmbar para gravar o primeiro.</li>';
+  $('#todos').innerHTML = registros.length
+    ? registros.map(r => itemHTML(r, true)).join('')
+    : '<li class="vazio">A memória de bordo está vazia. Grave um registro ou abra um áudio que você já tem, como um do WhatsApp.</li>';
+  $('#contagem').textContent = registros.length + (registros.length === 1 ? ' registro' : ' registros');
+  atualizarProgresso();
+}
+function desenharLeituras() {
+  $('#leRegistros').textContent = registros.length;
+  $('#leDuracao').textContent = fmtDur(registros.reduce((s, r) => s + (r.duracaoSeg || 0), 0));
+  $('#leTamanho').textContent = fmtTam(registros.reduce((s, r) => s + r.tamanho, 0));
+}
+function desenharSistemas() {
+  const itens = [
+    ['GRAVADOR', sistemas.gravador],
+    [navigator.onLine ? 'REDE' : 'OFFLINE', navigator.onLine ? 'ok' : 'aviso'],
+    ['MEMÓRIA', sistemas.memoriaProtegida ? 'ok' : 'aviso'],
+  ];
+  $('#sistemas').innerHTML = itens.map(([nome, est]) => `<span><span class="luz ${est}"></span>${nome}</span>`).join('');
+}
+function desenharMensagem() {
+  const h = new Date().getHours();
+  const partes = [(h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', capitão.'];
+  const n = registros.length;
+  const hoje = registros.filter(r => new Date(r.criadoEm).toDateString() === new Date().toDateString()).length;
+  if (!n) partes.push('Nenhum registro de áudio armazenado. O canal de gravação está pronto quando desejar.');
+  else partes.push(`Há ${n} ${n === 1 ? 'registro' : 'registros'} de áudio na memória de bordo${hoje ? `, ${hoje} de hoje` : ''}.`);
+  const alertas = [];
+  if (sistemas.gravador === 'erro') alertas.push('O microfone não está acessível neste navegador.');
+  if (!sistemas.memoriaProtegida) alertas.push('A memória de bordo está em modo temporário. Recomendo protegê-la em Ajustes.');
+  partes.push(...(alertas.length ? alertas : ['Nenhum alerta no momento.']));
+  $('#msgComputador').textContent = partes.join(' ');
+}
+function desenharAjustes() {
+  $$('.opcoes').forEach(g => {
+    const valor = String(prefs[g.dataset.pref]);
+    g.querySelectorAll('button').forEach(b => b.classList.toggle('ativo', b.dataset.valor === valor));
+  });
+  $('#txtProtecao').textContent = sistemas.memoriaProtegida
+    ? 'Memória protegida: o navegador não vai apagar seus registros para liberar espaço.'
+    : 'Memória temporária: o navegador pode apagar os registros se faltar espaço ou se o app ficar muito tempo sem uso (comum no iPhone). Instalar o app na tela inicial e tocar em "Proteger dados" ajuda. Faça backups.';
+  $('#btnProteger').hidden = sistemas.memoriaProtegida;
+  $('#versao').textContent = 'v' + VERSAO;
+}
+function desenhar() {
+  desenharListas();
+  desenharLeituras();
+  desenharSistemas();
+  desenharMensagem();
+  desenharAjustes();
+}
+
+function irPara(tela) {
+  if (!TELAS.includes(tela)) tela = 'status';
+  $$('.tela').forEach(s => {
+    const ativa = s.id === 'tela-' + tela;
+    s.hidden = !ativa;
+    s.classList.remove('acende');
+    if (ativa) { void s.offsetWidth; s.classList.add('acende'); }
+  });
+  $$('.nav button').forEach(b => b.classList.toggle('ativo', b.dataset.ir === tela));
+  window.scrollTo(0, 0);
+  if (location.hash !== '#' + tela) history.replaceState(null, '', '#' + tela);
+}
+
+function relogio() {
+  const d = new Date();
+  $('#dataEstelar').textContent = d.getFullYear() + '.' + String(diaDoAno(d)).padStart(3, '0');
+  $('#hora').textContent = '· ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function criarEstrelas() {
+  const visor = $('#visor');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('span'), z = Math.random() < 0.2 ? 2 : 1;
+    s.className = 'estrela';
+    s.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 100}%;width:${z}px;height:${z}px;opacity:${(0.3 + Math.random() * 0.6).toFixed(2)}`;
+    visor.prepend(s);
+  }
+}
+const SEGMENTOS_VU = 12;
+function criarVu() {
+  $('#vu').innerHTML = Array.from({ length: SEGMENTOS_VU }, (_, i) =>
+    `<i class="${i >= 10 ? 'pico' : i >= 7 ? 'alto' : ''}" style="height:${8 + i * 1.7}px"></i>`).join('');
+}
+
+// ===== Gravação =====
+const gravador = { rec: null, stream: null, pedacos: [], inicio: 0, timer: 0, raf: 0, fonte: null, wake: null };
+function tipoGravacao() {
+  return ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
+    .find(t => MediaRecorder.isTypeSupported?.(t)) ?? '';
+}
+async function iniciarGravacao() {
+  contextoAudio(); // precisa nascer no toque do usuário, senão o iPhone bloqueia o som
+  if (!suportaGravacao()) {
+    avisar('Este navegador não oferece gravação de áudio. Use "Abrir áudio" para enviar um arquivo.', 'erro');
+    bipe('erro');
+    return;
+  }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (e) {
+    avisar(e?.name === 'NotAllowedError'
+      ? 'Acesso ao microfone negado. Libere o microfone nas permissões do navegador.'
+      : 'Não foi possível acessar o microfone.', 'erro');
+    bipe('erro');
+    sistemas.gravador = 'erro';
+    desenharSistemas();
+    desenharMensagem();
+    return;
+  }
+  const tipo = tipoGravacao();
+  const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
+  Object.assign(gravador, { rec, stream, pedacos: [], inicio: Date.now() });
+  rec.ondataavailable = e => { if (e.data.size) gravador.pedacos.push(e.data); };
+  rec.onstop = finalizarGravacao;
+  rec.start(1000);
+  bipe('inicio');
+  sistemas.gravador = 'ok';
+  desenharSistemas();
+  desenharMensagem();
+  $('#dock').classList.add('gravando');
+  $('#btnGravar').setAttribute('aria-label', 'Encerrar gravação');
+  $('#recEstado').textContent = 'Canal aberto';
+  $('#recTitulo').textContent = '00:00';
+  gravador.timer = setInterval(() => { $('#recTitulo').textContent = fmtDur(Math.floor((Date.now() - gravador.inicio) / 1000)); }, 250);
+  medirVolume(stream);
+  try { gravador.wake = await navigator.wakeLock?.request('screen'); } catch {} // evita a tela apagar durante a gravação
+}
+function medirVolume(stream) {
+  const ctx = contextoAudio();
+  if (!ctx) return;
+  const fonte = ctx.createMediaStreamSource(stream), analisador = ctx.createAnalyser();
+  analisador.fftSize = 512;
+  fonte.connect(analisador);
+  gravador.fonte = fonte;
+  const dados = new Uint8Array(analisador.fftSize), segs = [...$('#vu').children];
+  const passo = () => {
+    analisador.getByteTimeDomainData(dados);
+    let soma = 0;
+    for (const v of dados) { const x = (v - 128) / 128; soma += x * x; }
+    const acesos = Math.round(Math.min(1, Math.sqrt(soma / dados.length) * 5) * segs.length);
+    segs.forEach((s, i) => s.classList.toggle('aceso', i < acesos));
+    gravador.raf = requestAnimationFrame(passo);
+  };
+  passo();
+}
+function pararGravacao() {
+  if (gravador.rec?.state === 'recording') gravador.rec.stop();
+}
+async function finalizarGravacao() {
+  const { rec, stream, pedacos, inicio } = gravador;
+  stream.getTracks().forEach(t => t.stop());
+  clearInterval(gravador.timer);
+  cancelAnimationFrame(gravador.raf);
+  gravador.fonte?.disconnect();
+  gravador.wake?.release?.().catch(() => {});
+  Object.assign(gravador, { rec: null, stream: null, fonte: null, wake: null });
+  $('#dock').classList.remove('gravando');
+  $('#btnGravar').setAttribute('aria-label', 'Gravar registro');
+  $('#recEstado').textContent = 'Canal de áudio · pronto';
+  $('#recTitulo').textContent = 'Gravar registro';
+  $$('#vu i').forEach(s => s.classList.remove('aceso'));
+
+  const tipo = rec.mimeType || pedacos[0]?.type || 'audio/webm';
+  const audio = new Blob(pedacos, { type: tipo });
+  if (!audio.size) { avisar('Nenhum áudio foi captado.', 'erro'); bipe('erro'); return; }
+  const r = normalizarRegistro({
+    id: novoId(), criadoEm: new Date().toISOString(), origem: 'gravado', nome: 'Registro de voz',
+    tipo, duracaoSeg: (Date.now() - inicio) / 1000, tamanho: audio.size, audio,
+  });
+  if (!(await guardar(r))) return;
+  await verificarSistemas();
+  desenhar();
+  bipe('fim');
+  avisar(`Registro armazenado. Duração: ${fmtDur(r.duracaoSeg)}.`);
+}
+
+// ===== Importar áudios existentes =====
+function duracaoDe(blob) {
+  return new Promise(ok => {
+    const a = new Audio(), url = URL.createObjectURL(blob);
+    const fim = v => { clearTimeout(t); URL.revokeObjectURL(url); a.removeAttribute('src'); ok(Number.isFinite(v) ? v : null); };
+    const t = setTimeout(() => fim(null), 5000);
+    a.preload = 'metadata';
+    a.onloadedmetadata = () => fim(a.duration);
+    a.onerror = () => fim(null);
+    a.src = url;
+  });
+}
+async function importarAudios(arquivos) {
+  let n = 0, ignorados = 0;
+  for (const arq of arquivos) {
+    const ext = (arq.name.match(/\.([a-z0-9]+)$/i)?.[1] || '').toLowerCase();
+    if (!arq.type.startsWith('audio/') && !TIPOS_POR_EXT[ext]) { ignorados++; continue; }
+    const tipo = arq.type || TIPOS_POR_EXT[ext];
+    const audio = new Blob([arq], { type: tipo });
+    const r = normalizarRegistro({
+      id: novoId(), criadoEm: new Date().toISOString(), origem: 'importado',
+      nome: arq.name.replace(/\.[^.]+$/, ''), tipo, duracaoSeg: await duracaoDe(audio), tamanho: audio.size, audio,
+    });
+    if (await guardar(r)) n++;
+  }
+  await verificarSistemas();
+  desenhar();
+  if (n) { bipe('ok'); avisar(`${n} ${n === 1 ? 'áudio importado' : 'áudios importados'} para a memória de bordo.`); }
+  if (ignorados) { bipe('erro'); avisar(`${ignorados} ${ignorados === 1 ? 'arquivo ignorado: não é' : 'arquivos ignorados: não são'} áudio.`, 'erro'); }
+}
+
+// ===== Reprodução =====
+const player = new Audio();
+let tocandoId = null, urlTocando = null;
+function tocar(id) {
+  if (id === tocandoId) {
+    if (player.paused) player.play().catch(falhaReproducao); else player.pause();
+    return;
+  }
+  const r = registros.find(x => x.id === id);
+  if (!r) return;
+  pararReproducao();
+  urlTocando = URL.createObjectURL(r.audio);
+  tocandoId = id;
+  player.src = urlTocando;
+  player.play().catch(falhaReproducao);
+}
+function falhaReproducao(e) {
+  if (e?.name === 'AbortError') return;
+  avisar('Este aparelho não consegue reproduzir este formato de áudio. O arquivo continua guardado.', 'erro');
+  bipe('erro');
+  pararReproducao();
+}
+function pararReproducao() {
+  player.pause();
+  player.removeAttribute('src');
+  if (urlTocando) URL.revokeObjectURL(urlTocando);
+  tocandoId = urlTocando = null;
+  atualizarProgresso();
+}
+function atualizarProgresso() {
+  $$('.item').forEach(li => {
+    const ativo = li.dataset.id === tocandoId;
+    li.classList.toggle('tocando', ativo && !player.paused);
+    const dur = player.duration;
+    li.querySelector('.prog i').style.width = ativo && Number.isFinite(dur) && dur > 0 ? (player.currentTime / dur * 100) + '%' : '0';
+  });
+}
+['play', 'pause', 'timeupdate'].forEach(ev => player.addEventListener(ev, atualizarProgresso));
+player.addEventListener('ended', pararReproducao);
+
+// ===== Baixar e apagar =====
+function baixarArquivo(blob, nome) {
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url;
+  a.download = nome;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+function baixarRegistro(id) {
+  const r = registros.find(x => x.id === id);
+  if (r) baixarArquivo(r.audio, `${r.nome.replace(/[\\/:*?"<>|]/g, '-')}.${extensao(r.tipo)}`);
+}
+async function apagarRegistro(id) {
+  const r = registros.find(x => x.id === id);
+  if (!r || !(await confirmar(`Apagar "${r.nome}" (${fmtQuando(r.criadoEm)})? Esta ação não pode ser desfeita.`, { titulo: 'Apagar registro', sim: 'Apagar' }))) return;
+  if (tocandoId === id) pararReproducao();
+  await bd.apagar(id);
+  registros = registros.filter(x => x.id !== id);
+  await verificarSistemas();
+  desenhar();
+  bipe('ok');
+  avisar('Registro apagado.');
+}
+
+// ===== Backup =====
+function blobParaBase64(blob) {
+  return new Promise((ok, falha) => {
+    const leitor = new FileReader();
+    leitor.onload = () => ok(String(leitor.result).split(',')[1] || '');
+    leitor.onerror = () => falha(leitor.error);
+    leitor.readAsDataURL(blob);
+  });
+}
+function base64ParaBlob(b64, tipo) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: tipo });
+}
+async function salvarBackup() {
+  const lista = [];
+  for (const r of registros) lista.push({ ...r, audio: undefined, audioBase64: await blobParaBase64(r.audio) });
+  const dados = { app: 'captains-log', formato: 1, versaoApp: VERSAO, exportadoEm: new Date().toISOString(), registros: lista };
+  const d = new Date();
+  baixarArquivo(new Blob([JSON.stringify(dados)], { type: 'application/json' }),
+    `captains-log-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`);
+  bipe('ok');
+  avisar(`Backup salvo com ${lista.length} ${lista.length === 1 ? 'registro' : 'registros'}.`);
+}
+async function restaurarBackup(arquivo) {
+  let dados;
+  try { dados = JSON.parse(await arquivo.text()); } catch { dados = null; }
+  if (dados?.app !== 'captains-log' || !Array.isArray(dados.registros)) {
+    avisar('Este arquivo não é um backup do Captain\'s Log.', 'erro');
+    bipe('erro');
+    return;
+  }
+  const n = dados.registros.length;
+  if (!(await confirmar(`Restaurar ${n} ${n === 1 ? 'registro' : 'registros'} deste backup? Registros iguais aos que já existem serão substituídos; os outros continuam.`, { titulo: 'Restaurar backup', sim: 'Restaurar', perigo: false }))) return;
+  let ok = 0;
+  for (const x of dados.registros) {
+    try {
+      const r = normalizarRegistro({ ...x, audio: x.audioBase64 ? base64ParaBlob(x.audioBase64, x.tipo || '') : null });
+      if (r?.audio && await guardar(r)) ok++;
+    } catch {}
+  }
+  await verificarSistemas();
+  desenhar();
+  bipe(ok ? 'ok' : 'erro');
+  avisar(ok === n ? `Backup restaurado: ${ok} ${ok === 1 ? 'registro' : 'registros'}.` : `Backup restaurado em parte: ${ok} de ${n} registros.`, ok === n ? 'ok' : 'erro');
+}
+
+async function protegerMemoria() {
+  let ok = false;
+  try { ok = await navigator.storage?.persist?.(); } catch {}
+  await verificarSistemas();
+  desenhar();
+  if (ok) { bipe('ok'); avisar('Memória de bordo protegida.'); }
+  else { bipe('erro'); avisar('O navegador recusou a proteção por enquanto. Instale o app na tela inicial e tente de novo.', 'erro'); }
+}
+
+// ===== Eventos =====
+document.addEventListener('click', e => {
+  const alvo = e.target.closest('[data-ir],[data-acao],.opcoes button');
+  if (!alvo) return;
+  if (alvo.dataset.ir) return irPara(alvo.dataset.ir);
+  const id = alvo.closest('.item')?.dataset.id;
+  switch (alvo.dataset.acao) {
+    case 'importar': return $('#arqAudio').click();
+    case 'tocar': return tocar(id);
+    case 'baixar': return baixarRegistro(id);
+    case 'apagar': return apagarRegistro(id);
+  }
+  const grupo = alvo.closest('.opcoes');
+  if (grupo) {
+    const v = alvo.dataset.valor;
+    prefs = normalizarPrefs({ ...prefs, [grupo.dataset.pref]: v === 'true' ? true : v === 'false' ? false : v });
+    salvarPrefs();
+    aplicarTema();
+    desenharAjustes();
+    bipe('ok');
+  }
+});
+$('#btnGravar').addEventListener('click', () => gravador.rec ? pararGravacao() : iniciarGravacao());
+$('#arqAudio').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) importarAudios(f); });
+$('#btnBackup').addEventListener('click', salvarBackup);
+$('#btnRestaurar').addEventListener('click', () => $('#arqBackup').click());
+$('#arqBackup').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) restaurarBackup(f); });
+$('#btnProteger').addEventListener('click', protegerMemoria);
+addEventListener('online', desenharSistemas);
+addEventListener('offline', desenharSistemas);
+
+async function iniciar() {
+  aplicarTema();
+  criarEstrelas();
+  criarVu();
+  relogio();
+  setInterval(relogio, 15000);
+  irPara(location.hash.slice(1));
+  try { await carregar(); }
+  catch { avisar('Não foi possível abrir a memória de bordo neste navegador.', 'erro'); }
+  await verificarSistemas();
+  desenhar();
+}
+iniciar();
+
+// Funciona sem internet depois de instalado. No PC de testes (localhost) fica desligado,
+// para cada alteração aparecer na hora; use ?sw=1 no endereço para testar o modo offline.
+const testeLocal = ['localhost', '127.0.0.1'].includes(location.hostname) && !location.search.includes('sw=1');
+if ('serviceWorker' in navigator && !testeLocal) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

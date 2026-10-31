@@ -1,0 +1,15 @@
+# Ambiente Python local
+.venv/
+__pycache__/
+*.pyc
+
+# Backups do app nunca vão para o GitHub
+captains-log-backup-*.json
+backup*.json
+
+# Áudios de teste, chaves e anotações pessoais
+pc-transcricao/testes/
+.env
+CLAUDE.local.md
+docs/PROJETO.md
+.claude/launch.json
